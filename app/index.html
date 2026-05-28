@@ -602,8 +602,6 @@ async function openProdHistory(prodId, prodName) {
 
 
 // ── Toplu SKT Güncelleme ──────────────────────────────────────────
-let bulkMode = false;
-let selectedProds = new Set();
 
 function toggleBulkMode() {
   bulkMode = !bulkMode;
@@ -1479,6 +1477,9 @@ window.addEventListener('offline', updateOnlineStatus);
 // Bu key ile yalnızca RLS'in izin verdiği veriye erişilebilir.
 const SUPABASE_URL = 'https://yvugevjbhgbqqhnqafbj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2dWdldmpiaGdicXFobnFhZmJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NzAwNDgsImV4cCI6MjA4OTM0NjA0OH0.jaeaY_BKvKEVrt31n2lk3H-WV2LNkaPdzWTvC_p1IWE';
+
+let bulkMode = false;
+let selectedProds = new Set();
 
 // ── Supabase Auth helpers ─────────────────────────────────────────
 async function sbAuth(path, body) {
