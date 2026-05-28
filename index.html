@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rafix — Akıllı SKT Takibi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#F5F2EB;
+  --dark:#1A1712;
+  --accent:#C85A2A;
+  --accent2:#2E7D52;
+  --muted:#7A7570;
+  --border:#E0DDD5;
+  --white:#FFFFFF;
+  --ff-serif:'Fraunces',Georgia,serif;
+  --ff-sans:'DM Sans',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--ff-sans);background:var(--cream);color:var(--dark);overflow-x:hidden}
+
+/* ── Lang Toggle ── */
+.lang-toggle{position:fixed;top:1.25rem;right:1.25rem;z-index:999;display:flex;background:var(--white);border:1.5px solid var(--border);border-radius:40px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.lang-btn{padding:6px 14px;border:none;background:none;font-size:12px;font-weight:600;font-family:var(--ff-sans);cursor:pointer;transition:all .2s;color:var(--muted)}
+.lang-btn.active{background:var(--dark);color:#fff}
+
+/* ── Nav ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(245,242,235,0.85);backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .3s}
+nav.scrolled{border-color:var(--border)}
+.nav-logo{font-family:var(--ff-serif);font-size:22px;color:var(--dark);font-weight:600}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;gap:2rem;align-items:center}
+.nav-links a{font-size:14px;color:var(--muted);text-decoration:none;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:var(--dark)}
+.nav-cta{padding:9px 20px;background:var(--accent);color:#fff;border-radius:40px;font-size:14px;font-weight:600;text-decoration:none;transition:opacity .2s}
+.nav-cta:hover{opacity:.85;color:#fff}
+
+/* ── Hero ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8rem 2rem 4rem;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;pointer-events:none}
+.hero-circle1{position:absolute;top:-10%;right:-5%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(200,90,42,0.12),transparent 70%)}
+.hero-circle2{position:absolute;bottom:-10%;left:-5%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(46,125,82,0.1),transparent 70%)}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--white);border:1.5px solid var(--border);border-radius:40px;padding:6px 16px;font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2rem;animation:fadeUp .6s ease both}
+.hero h1{font-family:var(--ff-serif);font-size:clamp(3rem,8vw,6rem);font-weight:700;line-height:1.05;letter-spacing:-2px;color:var(--dark);margin-bottom:1.5rem;animation:fadeUp .6s .1s ease both}
+.hero h1 em{font-style:italic;color:var(--accent)}
+.hero-sub{font-size:clamp(1rem,2vw,1.2rem);color:var(--muted);max-width:560px;line-height:1.7;margin-bottom:2.5rem;animation:fadeUp .6s .2s ease both}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;animation:fadeUp .6s .3s ease both}
+.btn-primary{padding:14px 32px;background:var(--accent);color:#fff;border-radius:40px;font-size:15px;font-weight:600;text-decoration:none;transition:all .2s;font-family:var(--ff-sans)}
+.btn-primary:hover{opacity:.88;transform:translateY(-1px)}
+.btn-ghost{padding:14px 32px;background:transparent;color:var(--dark);border:1.5px solid var(--border);border-radius:40px;font-size:15px;font-weight:600;text-decoration:none;transition:all .2s;font-family:var(--ff-sans)}
+.btn-ghost:hover{border-color:var(--dark);transform:translateY(-1px)}
+.hero-stats{display:flex;gap:3rem;margin-top:4rem;animation:fadeUp .6s .4s ease both;flex-wrap:wrap;justify-content:center}
+.hero-stat-num{font-family:var(--ff-serif);font-size:2.5rem;font-weight:700;color:var(--dark);line-height:1}
+.hero-stat-label{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* ── Problem ── */
+.section{padding:6rem 2rem;max-width:1100px;margin:0 auto}
+.section-tag{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:1rem}
+.section-title{font-family:var(--ff-serif);font-size:clamp(2rem,5vw,3.5rem);font-weight:700;line-height:1.1;letter-spacing:-1px;color:var(--dark);margin-bottom:1.25rem}
+.section-sub{font-size:1.05rem;color:var(--muted);line-height:1.7;max-width:560px}
+
+.problem-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:3rem}
+.problem-card{background:var(--white);border:1.5px solid var(--border);border-radius:20px;padding:1.75rem;transition:transform .2s}
+.problem-card:hover{transform:translateY(-3px)}
+.problem-icon{font-size:2.5rem;margin-bottom:1rem}
+.problem-title{font-family:var(--ff-serif);font-size:1.25rem;font-weight:600;color:var(--dark);margin-bottom:0.5rem}
+.problem-text{font-size:14px;color:var(--muted);line-height:1.6}
+
+/* ── Features ── */
+.features-wrap{background:var(--dark);padding:6rem 2rem;overflow:hidden}
+.features-inner{max-width:1100px;margin:0 auto}
+.features-inner .section-tag{color:rgba(200,90,42,0.8)}
+.features-inner .section-title{color:var(--white)}
+.features-inner .section-sub{color:rgba(255,255,255,0.5)}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem;margin-top:3rem}
+.feature-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:1.5rem;transition:all .2s}
+.feature-card:hover{background:rgba(255,255,255,0.08);transform:translateY(-2px)}
+.feature-icon{font-size:1.75rem;margin-bottom:1rem}
+.feature-title{font-size:15px;font-weight:600;color:#fff;margin-bottom:6px}
+.feature-text{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6}
+
+/* ── How it works ── */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;margin-top:3rem;position:relative}
+.steps::before{content:'';position:absolute;top:28px;left:14%;right:14%;height:1px;background:var(--border);z-index:0}
+.step{text-align:center;padding:0 1rem;position:relative;z-index:1}
+.step-num{width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;font-family:var(--ff-serif);font-size:1.5rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 4px 20px rgba(200,90,42,.3)}
+.step-title{font-weight:600;font-size:15px;color:var(--dark);margin-bottom:6px}
+.step-text{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* ── Pricing ── */
+.pricing-wrap{background:var(--white);padding:6rem 2rem}
+.pricing-inner{max-width:1100px;margin:0 auto}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:3rem}
+.price-card{border:1.5px solid var(--border);border-radius:24px;padding:2rem;position:relative;transition:transform .2s;background:var(--cream)}
+.price-card:hover{transform:translateY(-3px)}
+.price-card.featured{background:var(--dark);border-color:var(--dark);color:#fff}
+.price-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:40px;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase}
+.price-name{font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
+.price-card.featured .price-name{color:rgba(255,255,255,.5)}
+.price-amount{font-family:var(--ff-serif);font-size:3rem;font-weight:700;color:var(--dark);line-height:1;margin-bottom:4px}
+.price-card.featured .price-amount{color:#fff}
+.price-period{font-size:13px;color:var(--muted);margin-bottom:1.5rem}
+.price-card.featured .price-period{color:rgba(255,255,255,.4)}
+.price-desc{font-size:13px;color:var(--muted);margin-bottom:1.5rem;line-height:1.6}
+.price-card.featured .price-desc{color:rgba(255,255,255,.5)}
+.price-features{list-style:none;margin-bottom:2rem}
+.price-features li{font-size:14px;color:var(--dark);padding:7px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.price-card.featured .price-features li{color:rgba(255,255,255,.85);border-color:rgba(255,255,255,.08)}
+.price-features li::before{content:'✓';color:var(--accent2);font-weight:700;flex-shrink:0}
+.price-card.featured .price-features li::before{color:#5DCAA5}
+.price-cta{display:block;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:40px;font-size:14px;font-weight:600;font-family:var(--ff-sans);cursor:pointer;text-align:center;text-decoration:none;transition:opacity .2s}
+.price-cta:hover{opacity:.88;color:#fff}
+.price-cta.ghost{background:transparent;color:var(--dark);border:1.5px solid var(--border)}
+.price-cta.ghost:hover{border-color:var(--dark)}
+
+/* ── Testimonials ── */
+.testimonials-wrap{padding:6rem 2rem;background:var(--cream)}
+.testimonials-inner{max-width:1100px;margin:0 auto}
+.test-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:3rem}
+.test-card{background:var(--white);border:1.5px solid var(--border);border-radius:20px;padding:1.75rem}
+.test-text{font-family:var(--ff-serif);font-size:1.05rem;font-style:italic;color:var(--dark);line-height:1.6;margin-bottom:1.25rem}
+.test-author{display:flex;align-items:center;gap:10px}
+.test-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.test-name{font-weight:600;font-size:14px;color:var(--dark)}
+.test-role{font-size:12px;color:var(--muted)}
+
+/* ── CTA Banner ── */
+.cta-wrap{background:var(--accent);padding:6rem 2rem;text-align:center;position:relative;overflow:hidden}
+.cta-wrap::before{content:'';position:absolute;top:-50%;right:-10%;width:500px;height:500px;border-radius:50%;background:rgba(255,255,255,0.08)}
+.cta-wrap .section-title{color:#fff;position:relative}
+.cta-wrap .section-sub{color:rgba(255,255,255,0.7);margin:0 auto 2.5rem;position:relative}
+.btn-white{padding:14px 32px;background:#fff;color:var(--accent);border-radius:40px;font-size:15px;font-weight:700;text-decoration:none;display:inline-block;transition:all .2s;font-family:var(--ff-sans);position:relative}
+.btn-white:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.15)}
+
+/* ── Footer ── */
+footer{background:var(--dark);padding:3rem 2rem;text-align:center}
+.footer-logo{font-family:var(--ff-serif);font-size:20px;color:#fff;margin-bottom:1rem}
+.footer-logo span{color:var(--accent)}
+.footer-text{font-size:13px;color:rgba(255,255,255,.3)}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ── Mobile ── */
+@media(max-width:768px){
+  nav .nav-links{display:none}
+  .steps::before{display:none}
+  .hero h1{letter-spacing:-1px}
+  .hero-stats{gap:2rem}
+}
+
+.faq-item{border-bottom:1px solid var(--border)}
+.faq-q{width:100%;display:flex;align-items:center;justify-content:space-between;padding:1.1rem 0;background:none;border:none;font-size:15px;font-weight:600;color:var(--dark);cursor:pointer;font-family:var(--ff-serif);text-align:left;gap:12px}
+.faq-q:hover{color:var(--accent)}
+.faq-arrow{font-size:18px;transition:transform .2s;flex-shrink:0}
+.faq-a{padding-bottom:1rem}
+.faq-a p{font-size:14px;color:var(--muted);line-height:1.7}
+</style>
+</head>
+<body>
+
+<!-- Lang Toggle -->
+<div class="lang-toggle">
+  <button class="lang-btn active" onclick="setLang('tr')">TR</button>
+  <button class="lang-btn" onclick="setLang('en')">EN</button>
+</div>
+
+<!-- Nav -->
+<nav id="navbar">
+  <div class="nav-logo">Rafix<span>.</span></div>
+  <div class="nav-links">
+    <a href="#features" data-tr="Özellikler" data-en="Features">Özellikler</a>
+    <a href="#how" data-tr="Nasıl Çalışır" data-en="How It Works">Nasıl Çalışır</a>
+    <a href="#faq" data-tr="SSS" data-en="FAQ">SSS</a>
+    <a href="#contact" data-tr="İletişim" data-en="Contact">İletişim</a>
+    <a href="#pricing" data-tr="Fiyatlar" data-en="Pricing">Fiyatlar</a>
+    <a href="https://apo0942.github.io/Rafix/" class="nav-cta" data-tr="Ücretsiz Başla" data-en="Get Started Free">Ücretsiz Başla</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="hero-circle1"></div>
+    <div class="hero-circle2"></div>
+  </div>
+  <div class="hero-eyebrow" data-tr="🌿 Gıda İsrafına Son" data-en="🌿 Stop Food Waste">🌿 Gıda İsrafına Son</div>
+  <h1 data-tr="Dolabın<br><em>her zaman</em><br>taze kalsın." data-en="Keep your fridge<br><em>always</em><br>fresh.">Dolabın<br><em>her zaman</em><br>taze kalsın.</h1>
+  <p class="hero-sub" data-tr="Rafix ile son kullanma tarihlerini takip edin, grup oluşturun, israfı sıfıra indirin. Bireyden restorana, herkese özel akıllı SKT yönetimi." data-en="Track expiry dates, create groups, reduce waste to zero with Rafix. Smart expiry management for everyone — from individuals to restaurants.">Rafix ile son kullanma tarihlerini takip edin, grup oluşturun, israfı sıfıra indirin. Bireyden restorana, herkese özel akıllı SKT yönetimi.</p>
+  <div class="hero-actions">
+    <a href="https://apo0942.github.io/Rafix/" class="btn-primary" data-tr="Hemen Başla — Ücretsiz" data-en="Start Free Now">Hemen Başla — Ücretsiz</a>
+    <a href="#how" class="btn-ghost" data-tr="Nasıl Çalışır?" data-en="How It Works?">Nasıl Çalışır?</a>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="hero-stat-num">%30</div>
+      <div class="hero-stat-label" data-tr="Gıda İsrafı Azalması" data-en="Food Waste Reduction">Gıda İsrafı Azalması</div>
+    </div>
+    <div>
+      <div class="hero-stat-num">3dk</div>
+      <div class="hero-stat-label" data-tr="Kurulum Süresi" data-en="Setup Time">Kurulum Süresi</div>
+    </div>
+    <div>
+      <div class="hero-stat-num">∞</div>
+      <div class="hero-stat-label" data-tr="Ürün Takibi" data-en="Product Tracking">Ürün Takibi</div>
+    </div>
+  </div>
+</section>
+
+<!-- Problem -->
+<section style="padding:6rem 2rem;background:var(--white)">
+  <div style="max-width:1100px;margin:0 auto">
+    <div class="section-tag reveal" data-tr="Problem" data-en="Problem">Problem</div>
+    <h2 class="section-title reveal" data-tr="Her yıl milyonlarca lira<br>çöpe gidiyor." data-en="Billions wasted<br>every year.">Her yıl milyonlarca lira<br>çöpe gidiyor.</h2>
+    <p class="section-sub reveal" data-tr="Türkiye'de her yıl satın alınan gıdanın %30'u son kullanma tarihi geçtiği için israf ediliyor. Bu hem parasal hem de çevresel bir kayıp." data-en="30% of purchased food in Turkey is wasted due to expiry. This is both a financial and environmental loss.">Türkiye'de her yıl satın alınan gıdanın %30'u son kullanma tarihi geçtiği için israf ediliyor. Bu hem parasal hem de çevresel bir kayıp.</p>
+    <div class="problem-grid">
+      <div class="problem-card reveal">
+        <div class="problem-icon">😰</div>
+        <div class="problem-title" data-tr="Unutulan Ürünler" data-en="Forgotten Products">Unutulan Ürünler</div>
+        <p class="problem-text" data-tr="Buzdolabının arkasındaki ürünlerin SKT'sini kimse takip etmiyor. Fark ettiğinde çok geç olmuş oluyor." data-en="Nobody tracks expiry dates of products at the back of the fridge. By the time you notice, it's too late.">Buzdolabının arkasındaki ürünlerin SKT'sini kimse takip etmiyor. Fark ettiğinde çok geç olmuş oluyor.</p>
+      </div>
+      <div class="problem-card reveal">
+        <div class="problem-icon">👨‍👩‍👧</div>
+        <div class="problem-title" data-tr="Koordinasyon Eksikliği" data-en="Lack of Coordination">Koordinasyon Eksikliği</div>
+        <p class="problem-text" data-tr="Aile üyeleri veya iş arkadaşları hangi ürünün ne zaman biteceğini bilmiyor, gereksiz alımlar yapılıyor." data-en="Family members or coworkers don't know when products expire, leading to unnecessary purchases.">Aile üyeleri veya iş arkadaşları hangi ürünün ne zaman biteceğini bilmiyor, gereksiz alımlar yapılıyor.</p>
+      </div>
+      <div class="problem-card reveal">
+        <div class="problem-icon">💸</div>
+        <div class="problem-title" data-tr="Maddi Kayıp" data-en="Financial Loss">Maddi Kayıp</div>
+        <p class="problem-text" data-tr="Türk hanelerinin ortalama %12'si aylık gelirini gıdaya harcıyor. Bu gıdanın büyük kısmı kullanılmadan çöpe gidiyor." data-en="Average Turkish households spend 12% of monthly income on food. Much of this goes to waste unused.">Türk hanelerinin ortalama %12'si aylık gelirini gıdaya harcıyor. Bu gıdanın büyük kısmı kullanılmadan çöpe gidiyor.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features-wrap" id="features">
+  <div class="features-inner">
+    <div class="section-tag reveal" data-tr="Özellikler" data-en="Features">Özellikler</div>
+    <h2 class="section-title reveal" data-tr="İhtiyacınız olan her şey,<br>tek bir yerde." data-en="Everything you need,<br>in one place.">İhtiyacınız olan her şey,<br>tek bir yerde.</h2>
+    <p class="section-sub reveal" data-tr="Bireysel kullanım veya kurumsal market zincirleri — Rafix her ikisine de hazır." data-en="Individual use or corporate retail chains — Rafix is ready for both.">Bireysel kullanım veya kurumsal market zincirleri — Rafix her ikisine de hazır.</p>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon">🔔</div>
+        <div class="feature-title" data-tr="Akıllı Bildirimler" data-en="Smart Notifications">Akıllı Bildirimler</div>
+        <p class="feature-text" data-tr="SKT'si yaklaşan ürünler için otomatik bildirimler. Kritik, yaklaşıyor ve geçmiş için ayrı ayrı ayarlanabilir." data-en="Automatic notifications for products nearing expiry. Separately configurable for critical, approaching, and expired.">SKT'si yaklaşan ürünler için otomatik bildirimler. Kritik, yaklaşıyor ve geçmiş için ayrı ayrı ayarlanabilir.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">🏢</div>
+        <div class="feature-title" data-tr="Hiyerarşik Şube Yapısı" data-en="Hierarchical Branch Structure">Hiyerarşik Şube Yapısı</div>
+        <p class="feature-text" data-tr="İl → Bölge → Şube şeklinde sınırsız derinlikte grup yapısı. Merkez yöneticisi tüm şubeleri tek ekrandan görür." data-en="Unlimited depth group structure like Region → District → Branch. Central manager sees all branches from one screen.">İl → Bölge → Şube şeklinde sınırsız derinlikte grup yapısı. Merkez yöneticisi tüm şubeleri tek ekrandan görür.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">🔐</div>
+        <div class="feature-title" data-tr="Özelleştirilebilir Rol İzinleri" data-en="Customizable Role Permissions">Özelleştirilebilir Rol İzinleri</div>
+        <p class="feature-text" data-tr="Şube Müdürü, Depo Görevlisi, Raf Görevlisi, Kasiyer — her rol için izinler ve isimler şubeye özel ayarlanabilir." data-en="Branch Manager, Warehouse Staff, Shelf Worker, Cashier — permissions and names customizable per branch.">Şube Müdürü, Depo Görevlisi, Raf Görevlisi, Kasiyer — her rol için izinler ve isimler şubeye özel ayarlanabilir.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">📥</div>
+        <div class="feature-title" data-tr="Toplu Ürün Yükleme" data-en="Bulk Product Import">Toplu Ürün Yükleme</div>
+        <p class="feature-text" data-tr="Mevcut POS/ERP sisteminizden CSV veya Excel dosyası çıkarın, tek tıkla Rafix'e yükleyin. Binlerce ürün saniyeler içinde." data-en="Export CSV or Excel from your existing POS/ERP, upload to Rafix in one click. Thousands of products in seconds.">Mevcut POS/ERP sisteminizden CSV veya Excel dosyası çıkarın, tek tıkla Rafix'e yükleyin. Binlerce ürün saniyeler içinde.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title" data-tr="İsraf & SKT Analizi" data-en="Waste & Expiry Analytics">İsraf & SKT Analizi</div>
+        <p class="feature-text" data-tr="Kategori bazlı fire oranı, şube karşılaştırması, aylık israf raporu. Hangi üründen ne kadar fire verdiğinizi görün." data-en="Category-based waste rate, branch comparison, monthly waste report. See exactly how much you lose per product.">Kategori bazlı fire oranı, şube karşılaştırması, aylık israf raporu. Hangi üründen ne kadar fire verdiğinizi görün.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">📱</div>
+        <div class="feature-title" data-tr="Mobil & Web" data-en="Mobile & Web">Mobil & Web</div>
+        <p class="feature-text" data-tr="Android uygulaması ile rafta ML Kit ile SKT fotoğrafından oku. Web'de toplu yönetim, mobilde saha kontrolü." data-en="Android app reads expiry dates from photos with ML Kit. Bulk management on web, field control on mobile.">Android uygulaması ile rafta ML Kit ile SKT fotoğrafından oku. Web'de toplu yönetim, mobilde saha kontrolü.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">🔍</div>
+        <div class="feature-title" data-tr="Rafix Ürün Veritabanı" data-en="Rafix Product Database">Rafix Ürün Veritabanı</div>
+        <p class="feature-text" data-tr="Barkod okuyunca ürün adı, marka ve kategori otomatik dolar. Türkiye odaklı büyüyen topluluk veritabanı." data-en="Scanning a barcode auto-fills product name, brand and category. Growing community database focused on Turkey.">Barkod okuyunca ürün adı, marka ve kategori otomatik dolar. Türkiye odaklı büyüyen topluluk veritabanı.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">💬</div>
+        <div class="feature-title" data-tr="Ürün Notları & Aktivite" data-en="Product Notes & Activity">Ürün Notları & Aktivite</div>
+        <p class="feature-text" data-tr="Her ürüne konum notu ekleyin. Grup içinde kim ne yaptı, tam şeffaflık ile ekip koordinasyonu." data-en="Add location notes to each product. Full team coordination transparency — who did what in the group.">Her ürüne konum notu ekleyin. Grup içinde kim ne yaptı, tam şeffaflık ile ekip koordinasyonu.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">🌙</div>
+        <div class="feature-title" data-tr="Karanlık / Aydınlık Mod" data-en="Dark / Light Mode">Karanlık / Aydınlık Mod</div>
+        <p class="feature-text" data-tr="Sistem tercihinize göre otomatik tema geçişi veya manuel seçim. Gece de gündüz de rahat kullanım." data-en="Automatic theme switching based on system preference or manual selection. Comfortable use day and night.">Sistem tercihinize göre otomatik tema geçişi veya manuel seçim. Gece de gündüz de rahat kullanım.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section style="padding:6rem 2rem;background:var(--cream)" id="how">
+  <div style="max-width:1100px;margin:0 auto">
+    <div class="section-tag reveal" data-tr="Nasıl Çalışır?" data-en="How It Works?">Nasıl Çalışır?</div>
+    <h2 class="section-title reveal" data-tr="3 adımda başlayın." data-en="Start in 3 steps.">3 adımda başlayın.</h2>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">1</div>
+        <div class="step-title" data-tr="Kayıt Olun" data-en="Sign Up">Kayıt Olun</div>
+        <p class="step-text" data-tr="Bireysel veya kurumsal hesap seçin. 30 saniyede ücretsiz başlayın." data-en="Choose individual or corporate account. Start free in 30 seconds.">Bireysel veya kurumsal hesap seçin. 30 saniyede ücretsiz başlayın.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">2</div>
+        <div class="step-title" data-tr="Ürün Yükleyin" data-en="Import Products">Ürün Yükleyin</div>
+        <p class="step-text" data-tr="Barkod okuyun, CSV yükleyin veya manuel girin. Ürün bilgileri otomatik dolar." data-en="Scan barcodes, upload CSV or enter manually. Product info fills automatically.">Barkod okuyun, CSV yükleyin veya manuel girin. Ürün bilgileri otomatik dolar.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">3</div>
+        <div class="step-title" data-tr="Takip Et & Raporla" data-en="Track & Report">Takip Et & Raporla</div>
+        <p class="step-text" data-tr="SKT bildirimleri alın, şube bazlı fire raporlarını görün, israfı önleyin." data-en="Get expiry notifications, view branch waste reports, prevent losses.">SKT bildirimleri alın, şube bazlı fire raporlarını görün, israfı önleyin.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section class="pricing-wrap" id="pricing">
+  <div class="pricing-inner">
+    <div class="section-tag reveal" data-tr="Fiyatlandırma" data-en="Pricing">Fiyatlandırma</div>
+    <h2 class="section-title reveal" data-tr="İhtiyacınıza göre<br>doğru plan." data-en="The right plan<br>for your needs.">İhtiyacınıza göre<br>doğru plan.</h2>
+    <p class="section-sub reveal" data-tr="Bireysel kullanım sonsuza kadar ücretsiz. Kurumsal çözümler için şube bazlı esnek fiyatlandırma." data-en="Individual use is always free. Flexible per-branch pricing for corporate solutions.">Bireysel kullanım sonsuza kadar ücretsiz. Kurumsal çözümler için şube bazlı esnek fiyatlandırma.</p>
+
+    <!-- Tab seçici -->
+    <div style="display:flex;justify-content:center;gap:8px;margin-top:2rem;margin-bottom:0">
+      <button onclick="setPricingTab('bireysel')" id="tab-bireysel"
+        style="padding:10px 28px;border-radius:40px;border:2px solid var(--dark);background:var(--dark);color:#fff;font-size:14px;font-weight:600;font-family:var(--ff-sans);cursor:pointer;transition:all .2s"
+        data-tr="👤 Bireysel" data-en="👤 Individual">👤 Bireysel</button>
+      <button onclick="setPricingTab('kurumsal')" id="tab-kurumsal"
+        style="padding:10px 28px;border-radius:40px;border:2px solid var(--border);background:transparent;color:var(--muted);font-size:14px;font-weight:600;font-family:var(--ff-sans);cursor:pointer;transition:all .2s"
+        data-tr="🏢 Kurumsal" data-en="🏢 Corporate">🏢 Kurumsal</button>
+    </div>
+
+    <!-- BİREYSEL -->
+    <div id="pricing-bireysel" class="pricing-grid" style="max-width:700px;margin:0 auto">
+      <div class="price-card reveal">
+        <div class="price-name" data-tr="Ücretsiz" data-en="Free">Ücretsiz</div>
+        <div class="price-amount">₺0</div>
+        <div class="price-period" data-tr="Sonsuza kadar ücretsiz" data-en="Free forever">Sonsuza kadar ücretsiz</div>
+        <p class="price-desc" data-tr="Kişisel kullanım için. Kart gerekmez." data-en="For personal use. No credit card needed.">Kişisel kullanım için. Kart gerekmez.</p>
+        <ul class="price-features">
+          <li data-tr="20 ürün limiti" data-en="20 product limit">20 ürün limiti</li>
+          <li data-tr="1 grup · Max 2 üye" data-en="1 group · Max 2 members">1 grup · Max 2 üye</li>
+          <li data-tr="SKT bildirimleri" data-en="Expiry notifications">SKT bildirimleri</li>
+          <li data-tr="Barkod & SKT tarama" data-en="Barcode & expiry scanning">Barkod & SKT tarama</li>
+          <li data-tr="İstatistik & israf raporu" data-en="Statistics & waste report">İstatistik & israf raporu</li>
+        </ul>
+        <a href="https://apo0942.github.io/Rafix/" class="price-cta ghost" data-tr="Hemen Başla →" data-en="Get Started →">Hemen Başla →</a>
+      </div>
+
+      <div class="price-card featured reveal">
+        <div class="price-badge" data-tr="EN POPÜLER" data-en="MOST POPULAR">EN POPÜLER</div>
+        <div class="price-name" data-tr="Bireysel Pro" data-en="Individual Pro">Bireysel Pro</div>
+        <div class="price-amount">₺49</div>
+        <div class="price-period" data-tr="/ ay · Yıllık ödemede 2 ay bedava" data-en="/ month · 2 months free yearly">/ ay · Yıllık ödemede 2 ay bedava</div>
+        <p class="price-desc" data-tr="Sınırsız ürün, aile paylaşımı ve gelişmiş raporlar." data-en="Unlimited products, family sharing and advanced reports.">Sınırsız ürün, aile paylaşımı ve gelişmiş raporlar.</p>
+        <ul class="price-features">
+          <li data-tr="Sınırsız ürün" data-en="Unlimited products">Sınırsız ürün</li>
+          <li data-tr="3 grup · Max 10 üye" data-en="3 groups · Max 10 members">3 grup · Max 10 üye</li>
+          <li data-tr="PDF & Excel export" data-en="PDF & Excel export">PDF & Excel export</li>
+          <li data-tr="Aktivite geçmişi" data-en="Activity history">Aktivite geçmişi</li>
+          <li data-tr="Öncelikli destek" data-en="Priority support">Öncelikli destek</li>
+        </ul>
+        <a href="mailto:info@rafix.com.tr" class="price-cta" data-tr="Yakında Aktif" data-en="Coming Soon">Yakında Aktif</a>
+      </div>
+    </div>
+
+    <!-- KURUMSAL -->
+    <div id="pricing-kurumsal" class="pricing-grid" style="display:none">
+      <div class="price-card reveal">
+        <div class="price-name" data-tr="Başlangıç" data-en="Starter">Başlangıç</div>
+        <div class="price-amount">₺299</div>
+        <div class="price-period" data-tr="/ şube / ay" data-en="/ branch / month">/ şube / ay</div>
+        <p class="price-desc" data-tr="1-5 şube. Hızlı kurulum, CSV yükleme." data-en="1-5 branches. Quick setup, CSV import.">1-5 şube. Hızlı kurulum, CSV yükleme.</p>
+        <ul class="price-features">
+          <li data-tr="5 kullanıcı / şube" data-en="5 users / branch">5 kullanıcı / şube</li>
+          <li data-tr="CSV / Excel toplu yükleme" data-en="CSV / Excel bulk import">CSV / Excel toplu yükleme</li>
+          <li data-tr="Hiyerarşik şube yapısı" data-en="Hierarchical branch structure">Hiyerarşik şube yapısı</li>
+          <li data-tr="Özelleştirilebilir rol izinleri" data-en="Customizable role permissions">Özelleştirilebilir rol izinleri</li>
+          <li data-tr="SKT & fire raporları" data-en="Expiry & waste reports">SKT & fire raporları</li>
+        </ul>
+        <a href="mailto:info@rafix.com.tr" class="price-cta ghost" data-tr="Teklif Al →" data-en="Get Quote →">Teklif Al →</a>
+      </div>
+
+      <div class="price-card featured reveal">
+        <div class="price-badge" data-tr="EN POPÜLER" data-en="MOST POPULAR">EN POPÜLER</div>
+        <div class="price-name" data-tr="Büyüme" data-en="Growth">Büyüme</div>
+        <div class="price-amount">₺499</div>
+        <div class="price-period" data-tr="/ şube / ay · Yıllık 2 ay bedava" data-en="/ branch / month · 2 months free">/ şube / ay · Yıllık 2 ay bedava</div>
+        <p class="price-desc" data-tr="6-25 şube. PDF rapor ve gelişmiş analitik." data-en="6-25 branches. PDF reports and advanced analytics.">6-25 şube. PDF rapor ve gelişmiş analitik.</p>
+        <ul class="price-features">
+          <li data-tr="15 kullanıcı / şube" data-en="15 users / branch">15 kullanıcı / şube</li>
+          <li data-tr="PDF rapor export" data-en="PDF report export">PDF rapor export</li>
+          <li data-tr="Merkez yönetici paneli" data-en="Central manager dashboard">Merkez yönetici paneli</li>
+          <li data-tr="Global admin (tüm şubeler)" data-en="Global admin (all branches)">Global admin (tüm şubeler)</li>
+          <li data-tr="Öncelikli destek" data-en="Priority support">Öncelikli destek</li>
+        </ul>
+        <a href="mailto:info@rafix.com.tr" class="price-cta" data-tr="Teklif Al →" data-en="Get Quote →">Teklif Al →</a>
+      </div>
+
+      <div class="price-card reveal">
+        <div class="price-name" data-tr="Pro" data-en="Pro">Pro</div>
+        <div class="price-amount">₺799</div>
+        <div class="price-period" data-tr="/ şube / ay" data-en="/ branch / month">/ şube / ay</div>
+        <p class="price-desc" data-tr="26-100 şube. Sınırsız kullanıcı, API erişimi." data-en="26-100 branches. Unlimited users, API access.">26-100 şube. Sınırsız kullanıcı, API erişimi.</p>
+        <ul class="price-features">
+          <li data-tr="Sınırsız kullanıcı / şube" data-en="Unlimited users / branch">Sınırsız kullanıcı / şube</li>
+          <li data-tr="API erişimi" data-en="API access">API erişimi</li>
+          <li data-tr="POS entegrasyonu (opsiyonel)" data-en="POS integration (optional)">POS entegrasyonu (opsiyonel)</li>
+          <li data-tr="Özel destek temsilcisi" data-en="Dedicated account manager">Özel destek temsilcisi</li>
+          <li data-tr="SLA garantisi" data-en="SLA guarantee">SLA garantisi</li>
+        </ul>
+        <a href="mailto:info@rafix.com.tr" class="price-cta ghost" data-tr="Teklif Al →" data-en="Get Quote →">Teklif Al →</a>
+      </div>
+
+      <div class="price-card reveal" style="grid-column:1/-1;max-width:380px;margin:0 auto;text-align:center">
+        <div class="price-name" data-tr="Enterprise" data-en="Enterprise">Enterprise</div>
+        <div class="price-amount" style="font-size:2.5rem" data-tr="Özel" data-en="Custom">Özel</div>
+        <div class="price-period" data-tr="100+ şube · Özel fiyatlandırma" data-en="100+ branches · Custom pricing">100+ şube · Özel fiyatlandırma</div>
+        <p class="price-desc" data-tr="API entegrasyonu, SLA garantisi, yerinde kurulum ve eğitim." data-en="API integration, SLA guarantee, on-site setup and training.">API entegrasyonu, SLA garantisi, yerinde kurulum ve eğitim.</p>
+        <a href="mailto:info@rafix.com.tr" class="price-cta" data-tr="📩 Bizimle İletişime Geç" data-en="📩 Contact Us">📩 Bizimle İletişime Geç</a>
+      </div>
+    </div>
+
+    <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:1.5rem"
+      data-tr="💡 Tüm fiyatlar KDV hariçtir · Yıllık ödemede 2 ay bedava"
+      data-en="💡 All prices exclude VAT · 2 months free with annual payment">
+      💡 Tüm fiyatlar KDV hariçtir · Yıllık ödemede 2 ay bedava
+    </p>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonials-wrap">
+  <div class="testimonials-inner">
+    <div class="section-tag reveal" data-tr="Kullanıcı Yorumları" data-en="Testimonials">Kullanıcı Yorumları</div>
+    <h2 class="section-title reveal" data-tr="Onlar zaten kullanıyor." data-en="They're already using it.">Onlar zaten kullanıyor.</h2>
+    <div class="test-grid">
+      <div class="test-card reveal">
+        <p class="test-text" data-tr='"Artık hiçbir ürün çöpe gitmiyor. Eşimle birlikte kullanıyoruz, dolabı kim kontrol etti sorunu bitti."' data-en='"Nothing goes to waste anymore. My partner and I use it together — no more arguing about who checked the fridge."'>"Artık hiçbir ürün çöpe gitmiyor. Eşimle birlikte kullanıyoruz, dolabı kim kontrol etti sorunu bitti."</p>
+        <div class="test-author">
+          <div class="test-avatar">A</div>
+          <div>
+            <div class="test-name">Ayşe K.</div>
+            <div class="test-role" data-tr="Ev Hanımı, İzmir" data-en="Homemaker, İzmir">Ev Hanımı, İzmir</div>
+          </div>
+        </div>
+      </div>
+      <div class="test-card reveal">
+        <p class="test-text" data-tr='"Kafemizde 3 kişilik ekiple kullanıyoruz. Malzeme kontrolü artık çok daha sistematik."' data-en='"We use it with our 3-person team at the café. Inventory control is so much more systematic now."'>"Kafemizde 3 kişilik ekiple kullanıyoruz. Malzeme kontrolü artık çok daha sistematik."</p>
+        <div class="test-author">
+          <div class="test-avatar" style="background:#2E7D52">M</div>
+          <div>
+            <div class="test-name">Mehmet D.</div>
+            <div class="test-role" data-tr="Kafe İşletmecisi, İstanbul" data-en="Café Owner, Istanbul">Kafe İşletmecisi, İstanbul</div>
+          </div>
+        </div>
+      </div>
+      <div class="test-card reveal">
+        <p class="test-text" data-tr='"4 kişilik ev arkadaşıyla yaşıyorum, Rafix olmadan buzdolabı kaosa dönüyordu."' data-en='"I live with 4 housemates — without Rafix, the fridge was total chaos."'>"4 kişilik ev arkadaşıyla yaşıyorum, Rafix olmadan buzdolabı kaosa dönüyordu."</p>
+        <div class="test-author">
+          <div class="test-avatar" style="background:#185FA5">Z</div>
+          <div>
+            <div class="test-name">Zeynep A.</div>
+            <div class="test-role" data-tr="Üniversite Öğrencisi, Ankara" data-en="University Student, Ankara">Üniversite Öğrencisi, Ankara</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SSS -->
+<section style="padding:6rem 2rem;background:var(--white)" id="faq">
+  <div style="max-width:800px;margin:0 auto">
+    <div class="section-tag reveal" data-tr="Sık Sorulan Sorular" data-en="FAQ">Sık Sorulan Sorular</div>
+    <h2 class="section-title reveal" data-tr="Aklınızdaki sorular." data-en="Your questions answered.">Aklınızdaki sorular.</h2>
+    <div style="margin-top:2.5rem" id="faq-list">
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span data-tr="Verilerim güvende mi?" data-en="Is my data safe?">Verilerim güvende mi?</span>
+          <span class="faq-arrow">▾</span>
+        </button>
+        <div class="faq-a" style="display:none">
+          <p data-tr="Tüm veriler Supabase altyapısı üzerinde şifreli olarak saklanır. Verileriniz üçüncü şahıslarla paylaşılmaz. GDPR uyumlu altyapı kullanıyoruz." data-en="All data is stored encrypted on Supabase infrastructure. Your data is never shared with third parties. We use GDPR-compliant infrastructure.">Tüm veriler Supabase altyapısı üzerinde şifreli olarak saklanır. Verileriniz üçüncü şahıslarla paylaşılmaz. GDPR uyumlu altyapı kullanıyoruz.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span data-tr="Ücretsiz plan ne kadar süre geçerli?" data-en="How long is the free plan valid?">Ücretsiz plan ne kadar süre geçerli?</span>
+          <span class="faq-arrow">▾</span>
+        </button>
+        <div class="faq-a" style="display:none">
+          <p data-tr="Bireysel ücretsiz plan süresiz geçerlidir. Kurumsal ücretsiz deneme planı ise 1 şube ve 50 ürün ile sınırlıdır, süre kısıtı yoktur." data-en="The individual free plan is valid indefinitely. The corporate free trial is limited to 1 branch and 50 products, with no time limit.">Bireysel ücretsiz plan süresiz geçerlidir. Kurumsal ücretsiz deneme planı ise 1 şube ve 50 ürün ile sınırlıdır, süre kısıtı yoktur.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span data-tr="Mevcut ERP/POS sistemimizle entegre olabilir mi?" data-en="Can it integrate with our existing ERP/POS?">Mevcut ERP/POS sistemimizle entegre olabilir mi?</span>
+          <span class="faq-arrow">▾</span>
+        </button>
+        <div class="faq-a" style="display:none">
+          <p data-tr="Evet. Mevcut sisteminizden CSV veya Excel çıktısı alıp Rafix'e yükleyebilirsiniz. Daha derin entegrasyon için API seçeneği kurumsal planlarda mevcuttur." data-en="Yes. You can export CSV or Excel from your existing system and upload to Rafix. Deeper integration via API is available on corporate plans.">Evet. Mevcut sisteminizden CSV veya Excel çıktısı alıp Rafix'e yükleyebilirsiniz. Daha derin entegrasyon için API seçeneği kurumsal planlarda mevcuttur.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span data-tr="İstediğim zaman iptal edebilir miyim?" data-en="Can I cancel anytime?">İstediğim zaman iptal edebilir miyim?</span>
+          <span class="faq-arrow">▾</span>
+        </button>
+        <div class="faq-a" style="display:none">
+          <p data-tr="Evet, herhangi bir taahhüt yoktur. İstediğiniz zaman planınızı değiştirebilir veya iptal edebilirsiniz. Verileriniz 30 gün boyunca saklanır." data-en="Yes, there's no commitment. You can change or cancel your plan at any time. Your data is retained for 30 days.">Evet, herhangi bir taahhüt yoktur. İstediğiniz zaman planınızı değiştirebilir veya iptal edebilirsiniz. Verileriniz 30 gün boyunca saklanır.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span data-tr="Kaç kullanıcı aynı anda kullanabilir?" data-en="How many users can use it simultaneously?">Kaç kullanıcı aynı anda kullanabilir?</span>
+          <span class="faq-arrow">▾</span>
+        </button>
+        <div class="faq-a" style="display:none">
+          <p data-tr="Plana göre değişir. Başlangıç planı şube başına 5, Büyüme planı 15, Pro plan sınırsız kullanıcı destekler. Tüm kullanıcılar eş zamanlı çalışabilir." data-en="Depends on the plan. Starter supports 5 per branch, Growth 15, Pro is unlimited. All users can work simultaneously.">Plana göre değişir. Başlangıç planı şube başına 5, Büyüme planı 15, Pro plan sınırsız kullanıcı destekler. Tüm kullanıcılar eş zamanlı çalışabilir.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span data-tr="Android uygulaması ücretsiz mi?" data-en="Is the Android app free?">Android uygulaması ücretsiz mi?</span>
+          <span class="faq-arrow">▾</span>
+        </button>
+        <div class="faq-a" style="display:none">
+          <p data-tr="Evet, Android uygulaması web hesabınızla senkronize çalışır. Ayrı bir ücret yoktur — web planınız mobilde de geçerlidir." data-en="Yes, the Android app syncs with your web account. No separate charge — your web plan works on mobile too.">Evet, Android uygulaması web hesabınızla senkronize çalışır. Ayrı bir ücret yoktur — web planınız mobilde de geçerlidir.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- İletişim -->
+<section style="padding:6rem 2rem;background:var(--cream)" id="contact">
+  <div style="max-width:700px;margin:0 auto">
+    <div class="section-tag reveal" data-tr="İletişim" data-en="Contact">İletişim</div>
+    <h2 class="section-title reveal" data-tr="Demo veya teklif almak için<br>bize yazın." data-en="Write to us for a demo<br>or quote.">Demo veya teklif almak için<br>bize yazın.</h2>
+    <p class="section-sub reveal" style="margin-bottom:2.5rem" data-tr="Kurumsal çözümler, özel entegrasyon veya sadece bir soru için — 24 saat içinde yanıt veririz." data-en="For corporate solutions, custom integrations or just a question — we respond within 24 hours.">Kurumsal çözümler, özel entegrasyon veya sadece bir soru için — 24 saat içinde yanıt veririz.</p>
+
+    <form id="contact-form" onsubmit="submitContact(event)" style="background:var(--white);border-radius:var(--rad-lg);padding:2rem;border:1.5px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+        <div>
+          <label style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px" data-tr="Ad Soyad" data-en="Full Name">Ad Soyad</label>
+          <input type="text" id="cf-name" required placeholder="Adınız Soyadınız" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rad);font-size:14px;font-family:var(--ff-sans);outline:none;background:var(--white);color:var(--dark);box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px" data-tr="E-posta" data-en="Email">E-posta</label>
+          <input type="email" id="cf-email" required placeholder="ornek@sirket.com" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rad);font-size:14px;font-family:var(--ff-sans);outline:none;background:var(--white);color:var(--dark);box-sizing:border-box">
+        </div>
+      </div>
+      <div style="margin-bottom:1rem">
+        <label style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px" data-tr="Şirket / Konu" data-en="Company / Subject">Şirket / Konu</label>
+        <input type="text" id="cf-subject" placeholder="Şirket adınız veya konu" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rad);font-size:14px;font-family:var(--ff-sans);outline:none;background:var(--white);color:var(--dark);box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:1.5rem">
+        <label style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px" data-tr="Mesajınız" data-en="Message">Mesajınız</label>
+        <textarea id="cf-message" required rows="4" placeholder="Demo talep ediyorum / Fiyat bilgisi istiyorum..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rad);font-size:14px;font-family:var(--ff-sans);outline:none;background:var(--white);color:var(--dark);resize:vertical;box-sizing:border-box"></textarea>
+      </div>
+      <button type="submit" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:40px;font-size:15px;font-weight:600;font-family:var(--ff-sans);cursor:pointer;transition:opacity .15s" data-tr="Mesaj Gönder →" data-en="Send Message →">Mesaj Gönder →</button>
+      <div id="cf-success" style="display:none;margin-top:1rem;text-align:center;color:var(--accent);font-size:14px;font-weight:600" data-tr="✅ Mesajınız alındı! En kısa sürede dönüş yapacağız." data-en="✅ Message received! We'll get back to you soon.">✅ Mesajınız alındı! En kısa sürede dönüş yapacağız.</div>
+    </form>
+
+    <div style="margin-top:1.5rem;text-align:center;font-size:13px;color:var(--muted)">
+      <span data-tr="Ya da direkt yazın:" data-en="Or write directly:">Ya da direkt yazın:</span>
+      <a href="mailto:info@rafix.com.tr" style="color:var(--accent);font-weight:600;margin-left:6px">info@rafix.com.tr</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-wrap">
+  <div style="position:relative;max-width:700px;margin:0 auto">
+    <h2 class="section-title reveal" data-tr="Gıda israfını birlikte durduralım." data-en="Let's stop food waste together.">Gıda israfını birlikte durduralım.</h2>
+    <p class="section-sub reveal" data-tr="Ücretsiz hesap oluşturun, 3 dakikada kurulum yapın. Kredi kartı gerekmez." data-en="Create a free account, set up in 3 minutes. No credit card required.">Ücretsiz hesap oluşturun, 3 dakikada kurulum yapın. Kredi kartı gerekmez.</p>
+    <a href="https://apo0942.github.io/Rafix/" class="btn-white reveal" data-tr="Rafix'i Ücretsiz Dene →" data-en="Try Rafix Free →">Rafix'i Ücretsiz Dene →</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">Rafix<span>.</span></div>
+  <p class="footer-text" data-tr="© 2026 Rafix. Tüm hakları saklıdır." data-en="© 2026 Rafix. All rights reserved.">© 2026 Rafix. Tüm hakları saklıdır.</p>
+</footer>
+
+<script>
+// Lang
+let currentLang = 'tr';
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === lang));
+  document.querySelectorAll('[data-tr]').forEach(el => {
+    const text = el.getAttribute('data-' + lang);
+    if (text) el.innerHTML = text;
+  });
+  document.documentElement.lang = lang === 'tr' ? 'tr' : 'en';
+}
+
+// Nav scroll
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// Reveal on scroll
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+function toggleFaq(btn) {
+  const answer = btn.nextElementSibling;
+  const arrow  = btn.querySelector('.faq-arrow');
+  const isOpen = answer.style.display !== 'none';
+  // Tümünü kapat
+  document.querySelectorAll('.faq-a').forEach(a => a.style.display = 'none');
+  document.querySelectorAll('.faq-arrow').forEach(a => a.style.transform = '');
+  // Seçileni aç/kapat
+  if (!isOpen) {
+    answer.style.display = '';
+    arrow.style.transform = 'rotate(180deg)';
+  }
+}
+
+function submitContact(e) {
+  e.preventDefault();
+  const name    = document.getElementById('cf-name').value;
+  const email   = document.getElementById('cf-email').value;
+  const subject = document.getElementById('cf-subject').value;
+  const message = document.getElementById('cf-message').value;
+  // mailto ile gönder
+  const body = encodeURIComponent(`Ad Soyad: ${name}\nŞirket/Konu: ${subject}\n\n${message}`);
+  window.location.href = `mailto:info@rafix.com.tr?subject=Rafix İletişim: ${encodeURIComponent(subject || name)}&body=${body}`;
+  // Başarı mesajı göster
+  document.getElementById('cf-success').style.display = '';
+  document.getElementById('contact-form').querySelectorAll('input,textarea').forEach(el => el.value = '');
+}
+</script>
+</body>
+</html>
