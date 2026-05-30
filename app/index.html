@@ -723,70 +723,6 @@ window.addEventListener('online',  updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
 
-// ── Hata Mesajı Çevirici ─────────────────────────────────────────
-function translateError(msg) {
-  msg = (msg || '').toLowerCase();
-
-  // Kayıt hataları
-  if (msg.includes('already registered') || msg.includes('already been registered') || msg.includes('user already exists'))
-    return '❌ Bu e-posta adresi zaten kayıtlı. Giriş yapmayı deneyin.';
-  if (msg.includes('password should') || msg.includes('password must') || msg.includes('weak password'))
-    return '❌ Şifre en az 6 karakter olmalı.';
-  if (msg.includes('valid email') || msg.includes('invalid email') || msg.includes('email address is invalid'))
-    return '❌ Geçerli bir e-posta adresi girin.';
-  if (msg.includes('email not confirmed') || msg.includes('email address not confirmed'))
-    return '📧 E-posta adresinizi doğrulayın, ardından giriş yapın.';
-
-  // Giriş hataları
-  if (msg.includes('invalid login') || msg.includes('invalid credentials') || msg.includes('wrong password') || msg.includes('invalid password'))
-    return '❌ E-posta veya şifre hatalı.';
-  if (msg.includes('user not found') || msg.includes('no user found'))
-    return '❌ Bu e-posta ile kayıtlı kullanıcı bulunamadı.';
-  if (msg.includes('account locked') || msg.includes('account disabled'))
-    return '❌ Hesabınız kilitlendi. Destek ile iletişime geçin.';
-
-  // Rate limit / güvenlik
-  if (msg.includes('rate limit') || msg.includes('too many requests') || msg.includes('too many attempts'))
-    return '⏳ Çok fazla deneme. Lütfen birkaç dakika bekleyin.';
-  if (msg.includes('security purposes') || msg.includes('after 48') || msg.includes('after 60') || msg.includes('request this after'))
-    return '⏳ Güvenlik nedeniyle lütfen 1 dakika bekleyip tekrar deneyin.';
-  if (msg.includes('signup disabled') || msg.includes('signups not allowed'))
-    return '❌ Yeni kayıt şu an kapalı.';
-
-  // Ağ / sunucu hataları
-  if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch') || msg.includes('networkerror'))
-    return '🌐 İnternet bağlantısı hatası. Bağlantınızı kontrol edin.';
-  if (msg.includes('timeout') || msg.includes('timed out'))
-    return '⏳ Sunucu yanıt vermiyor. Lütfen tekrar deneyin.';
-  if (msg.includes('500') || msg.includes('internal server'))
-    return '⚠️ Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
-  if (msg.includes('503') || msg.includes('service unavailable'))
-    return '⚠️ Servis şu an kullanılamıyor. Lütfen daha sonra deneyin.';
-
-  // Şifre sıfırlama
-  if (msg.includes('token expired') || msg.includes('link expired'))
-    return '❌ Şifre sıfırlama linki süresi dolmuş. Yeni link talep edin.';
-  if (msg.includes('token not found') || msg.includes('invalid token'))
-    return '❌ Geçersiz veya süresi dolmuş link.';
-
-  // Oturum
-  if (msg.includes('session expired') || msg.includes('jwt expired') || msg.includes('token is expired'))
-    return '⏰ Oturumunuz sona erdi. Lütfen tekrar giriş yapın.';
-  if (msg.includes('not authenticated') || msg.includes('unauthorized') || msg.includes('401'))
-    return '❌ Bu işlem için giriş yapmanız gerekiyor.';
-
-  // Veritabanı
-  if (msg.includes('duplicate') || msg.includes('unique constraint') || msg.includes('unique violation'))
-    return '❌ Bu bilgi zaten kayıtlı.';
-  if (msg.includes('permission denied') || msg.includes('403'))
-    return '❌ Bu işlem için yetkiniz yok.';
-  if (msg.includes('not found') || msg.includes('404'))
-    return '❌ İstenen kayıt bulunamadı.';
-
-  // Bilinmeyen
-  return null; // null dönerse orijinal mesaj gösterilir
-}
-
 </script>
 </head>
 <body>
@@ -1560,6 +1496,71 @@ function translateError(msg) {
 // Bu key ile yalnızca RLS'in izin verdiği veriye erişilebilir.
 const SUPABASE_URL = 'https://yvugevjbhgbqqhnqafbj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2dWdldmpiaGdicXFobnFhZmJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NzAwNDgsImV4cCI6MjA4OTM0NjA0OH0.jaeaY_BKvKEVrt31n2lk3H-WV2LNkaPdzWTvC_p1IWE';
+
+
+// ── Hata Mesajı Çevirici ─────────────────────────────────────────
+function translateError(msg) {
+  msg = (msg || '').toLowerCase();
+
+  // Kayıt hataları
+  if (msg.includes('already registered') || msg.includes('already been registered') || msg.includes('user already exists'))
+    return '❌ Bu e-posta adresi zaten kayıtlı. Giriş yapmayı deneyin.';
+  if (msg.includes('password should') || msg.includes('password must') || msg.includes('weak password'))
+    return '❌ Şifre en az 6 karakter olmalı.';
+  if (msg.includes('valid email') || msg.includes('invalid email') || msg.includes('email address is invalid'))
+    return '❌ Geçerli bir e-posta adresi girin.';
+  if (msg.includes('email not confirmed') || msg.includes('email address not confirmed'))
+    return '📧 E-posta adresinizi doğrulayın, ardından giriş yapın.';
+
+  // Giriş hataları
+  if (msg.includes('invalid login') || msg.includes('invalid credentials') || msg.includes('wrong password') || msg.includes('invalid password'))
+    return '❌ E-posta veya şifre hatalı.';
+  if (msg.includes('user not found') || msg.includes('no user found'))
+    return '❌ Bu e-posta ile kayıtlı kullanıcı bulunamadı.';
+  if (msg.includes('account locked') || msg.includes('account disabled'))
+    return '❌ Hesabınız kilitlendi. Destek ile iletişime geçin.';
+
+  // Rate limit / güvenlik
+  if (msg.includes('rate limit') || msg.includes('too many requests') || msg.includes('too many attempts'))
+    return '⏳ Çok fazla deneme. Lütfen birkaç dakika bekleyin.';
+  if (msg.includes('security purposes') || msg.includes('after 48') || msg.includes('after 60') || msg.includes('request this after'))
+    return '⏳ Güvenlik nedeniyle lütfen 1 dakika bekleyip tekrar deneyin.';
+  if (msg.includes('signup disabled') || msg.includes('signups not allowed'))
+    return '❌ Yeni kayıt şu an kapalı.';
+
+  // Ağ / sunucu hataları
+  if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch') || msg.includes('networkerror'))
+    return '🌐 İnternet bağlantısı hatası. Bağlantınızı kontrol edin.';
+  if (msg.includes('timeout') || msg.includes('timed out'))
+    return '⏳ Sunucu yanıt vermiyor. Lütfen tekrar deneyin.';
+  if (msg.includes('500') || msg.includes('internal server'))
+    return '⚠️ Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
+  if (msg.includes('503') || msg.includes('service unavailable'))
+    return '⚠️ Servis şu an kullanılamıyor. Lütfen daha sonra deneyin.';
+
+  // Şifre sıfırlama
+  if (msg.includes('token expired') || msg.includes('link expired'))
+    return '❌ Şifre sıfırlama linki süresi dolmuş. Yeni link talep edin.';
+  if (msg.includes('token not found') || msg.includes('invalid token'))
+    return '❌ Geçersiz veya süresi dolmuş link.';
+
+  // Oturum
+  if (msg.includes('session expired') || msg.includes('jwt expired') || msg.includes('token is expired'))
+    return '⏰ Oturumunuz sona erdi. Lütfen tekrar giriş yapın.';
+  if (msg.includes('not authenticated') || msg.includes('unauthorized') || msg.includes('401'))
+    return '❌ Bu işlem için giriş yapmanız gerekiyor.';
+
+  // Veritabanı
+  if (msg.includes('duplicate') || msg.includes('unique constraint') || msg.includes('unique violation'))
+    return '❌ Bu bilgi zaten kayıtlı.';
+  if (msg.includes('permission denied') || msg.includes('403'))
+    return '❌ Bu işlem için yetkiniz yok.';
+  if (msg.includes('not found') || msg.includes('404'))
+    return '❌ İstenen kayıt bulunamadı.';
+
+  // Bilinmeyen
+  return null; // null dönerse orijinal mesaj gösterilir
+}
 
 let bulkMode = false;
 let selectedProds = new Set();
