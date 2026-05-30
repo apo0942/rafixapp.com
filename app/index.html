@@ -1848,6 +1848,7 @@ async function doRegister() {
   if (pass.length < 6) { showToast('Şifre en az 6 karakter olmalı.'); return; }
   if (accountType === 'kurumsal' && !company) { showToast('Şirket / market adını girin.'); return; }
 
+  try {
   // Kullanıcı adı benzersizlik kontrolü
   const exists = await sb(`profiles?username=eq.${encodeURIComponent(username)}&select=id`);
   if (exists?.length > 0) { showToast('Bu kullanıcı adı alınmış.'); return; }
@@ -1876,6 +1877,20 @@ async function doRegister() {
   setAuthMode('login');
   document.getElementById('auth-username').value = username;
   selectedAccountType = 'bireysel'; // sıfırla
+  } catch(e) {
+    const msg = e.message || '';
+    if (msg.includes('already registered') || msg.includes('already been registered'))
+      showToast('❌ Bu e-posta adresi zaten kayıtlı. Giriş yapmayı deneyin.');
+    else if (msg.includes('Password should') || msg.includes('password'))
+      showToast('❌ Şifre en az 6 karakter olmalı.');
+    else if (msg.includes('valid email') || msg.includes('email'))
+      showToast('❌ Geçerli bir e-posta adresi girin.');
+    else if (msg.includes('rate limit'))
+      showToast('⏳ Çok fazla deneme. Lütfen bekleyin.');
+    else
+      showToast('❌ Kayıt başarısız: ' + msg.slice(0, 60));
+    console.error('[Rafix] Kayıt hatası:', e);
+  }
 }
 
 // ── Şifre sıfırlama ────────────────────────────────────────────────
