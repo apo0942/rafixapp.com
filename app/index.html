@@ -1925,19 +1925,33 @@ async function doRegister() {
     data: { username, full_name: fullname, account_type: accountType, company_name: company }
   });
 
-  // profiles tablosuna kaydet
-  await sb('profiles', {
-    method: 'POST',
-    prefer: 'return=minimal',
-    body: {
-      id:           data.user.id,
-      username,
-      full_name:    fullname,
-      email,
-      account_type: accountType,
-      company_name: company || null,
+  // profiles tablosuna kaydet — kayıt token'ı ile
+  try {
+    const regToken = data.session?.access_token || SUPABASE_KEY;
+    const profileRes = await fetch(SUPABASE_URL + '/rest/v1/profiles', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + regToken,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        id:           data.user.id,
+        username,
+        full_name:    fullname,
+        email,
+        account_type: accountType,
+        company_name: company || null,
+      })
+    });
+    if (!profileRes.ok) {
+      const errText = await profileRes.text();
+      console.warn('[Rafix] Profil kaydı hatası:', errText);
     }
-  });
+  } catch(profileErr) {
+    console.warn('[Rafix] Profil kaydı hatası:', profileErr);
+  }
 
   showToast('Kayıt başarılı! E-postanı doğrula ve giriş yap. 📧');
   setAuthMode('login');
