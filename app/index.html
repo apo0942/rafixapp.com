@@ -1944,8 +1944,13 @@ async function doRegister() {
   document.getElementById('auth-username').value = username;
   selectedAccountType = 'bireysel'; // sıfırla
   } catch(e) {
-    const msg = e.message || '';
-    showToast(translateError(msg) || '❌ Kayıt başarısız: ' + msg.slice(0, 60));
+    const msg = (e.message || '').toLowerCase();
+    let errMsg = '❌ Kayıt başarısız.';
+    if (msg.includes('already registered') || msg.includes('already exists')) errMsg = '❌ Bu e-posta zaten kayıtlı.';
+    else if (msg.includes('security purposes') || msg.includes('after 48') || msg.includes('request this after')) errMsg = '⏳ Lütfen 1 dakika bekleyip tekrar deneyin.';
+    else if (msg.includes('password')) errMsg = '❌ Şifre en az 6 karakter olmalı.';
+    else if (msg.includes('email')) errMsg = '❌ Geçerli bir e-posta girin.';
+    showToast(errMsg);
     console.error('[Rafix] Kayıt hatası:', e);
   }
 }
