@@ -325,21 +325,72 @@ input[type=number] { -moz-appearance:textfield; }
 #groups-nav::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.35) }
 #groups-nav { scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.18) rgba(255,255,255,0.04) }
 
-/* Dark mode input ve label düzeltmeleri */
+
+/* ── Dark mode düzeltmeleri ── */
 [data-theme="dark"] .modal,
-[data-theme="system"] .modal { color: var(--dark); }
-[data-theme="dark"] input,
-[data-theme="system"] input,
-[data-theme="dark"] textarea,
-[data-theme="system"] textarea { color: var(--dark) !important; background: var(--cream) !important; }
-[data-theme="dark"] input::placeholder,
-[data-theme="system"] input::placeholder { color: var(--muted) !important; }
-[data-theme="dark"] label,
-[data-theme="system"] label { color: var(--dark); }
+[data-theme="system"] .modal {
+  color: var(--dark);
+  background: var(--white);
+}
 [data-theme="dark"] .modal-title,
 [data-theme="system"] .modal-title { color: var(--dark); }
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select,
+[data-theme="system"] input,
+[data-theme="system"] textarea,
+[data-theme="system"] select {
+  color: var(--dark) !important;
+  background: var(--cream) !important;
+  border-color: var(--border) !important;
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder,
+[data-theme="system"] input::placeholder,
+[data-theme="system"] textarea::placeholder {
+  color: var(--muted) !important;
+  opacity: 1;
+}
+[data-theme="dark"] label,
+[data-theme="system"] label { color: var(--dark); }
+
 [data-theme="dark"] .st-label,
-[data-theme="system"] .st-label { color: var(--muted); }
+[data-theme="system"] .st-label { color: var(--muted) !important; }
+
+[data-theme="dark"] .tab-btn,
+[data-theme="system"] .tab-btn {
+  color: var(--muted);
+  background: var(--white);
+  border-color: var(--border);
+}
+[data-theme="dark"] .tab-btn.active,
+[data-theme="system"] .tab-btn.active {
+  color: var(--dark);
+  background: var(--cream);
+  border-color: var(--border);
+}
+[data-theme="dark"] .modal-submit,
+[data-theme="system"] .modal-submit {
+  background: var(--accent);
+  color: #fff;
+}
+[data-theme="dark"] .field label,
+[data-theme="dark"] .mfield label,
+[data-theme="system"] .field label,
+[data-theme="system"] .mfield label {
+  color: var(--muted) !important;
+}
+[data-theme="dark"] .modal-head,
+[data-theme="system"] .modal-head { border-bottom-color: var(--border); }
+
+@media(prefers-color-scheme:dark) {
+  [data-theme="system"] .modal { color: var(--dark); background: var(--white); }
+  [data-theme="system"] input,
+  [data-theme="system"] textarea { color: var(--dark) !important; background: var(--cream) !important; }
+  [data-theme="system"] input::placeholder { color: var(--muted) !important; }
+}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
 // ── PDF & Excel Export ────────────────────────────────────────────
