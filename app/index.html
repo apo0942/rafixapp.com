@@ -555,8 +555,8 @@ async function loadGlobalAdminList(groupId) {
     el.innerHTML = admins.map(a => `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--cream);border-radius:var(--rad);margin-bottom:6px">
         <div>
-          <span style="font-size:13px;font-weight:600;color:var(--dark)">🌐 ${a.full_name || a.username}</span>
-          <span style="font-size:11px;color:var(--muted);margin-left:6px">@${a.username}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--dark)">🌐 ${escapeHtml(a.full_name || a.username)}</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:6px">@${escapeHtml(a.username)}</span>
         </div>
         <button onclick="removeGlobalAdmin('${a.id}')"
           style="font-size:11px;color:var(--danger);background:none;border:none;cursor:pointer;font-family:var(--ff-sans);padding:2px 6px">
@@ -1547,7 +1547,28 @@ window.addEventListener('offline', updateOnlineStatus);
 // Bu key ile yalnızca RLS'in izin verdiği veriye erişilebilir.
 const SUPABASE_URL = 'https://yvugevjbhgbqqhnqafbj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2dWdldmpiaGdicXFobnFhZmJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NzAwNDgsImV4cCI6MjA4OTM0NjA0OH0.jaeaY_BKvKEVrt31n2lk3H-WV2LNkaPdzWTvC_p1IWE';
+// Mail linklerinin döneceği uygulama adresi (Supabase Dashboard > Redirect URLs listesine de eklenmeli)
+const APP_URL = 'https://rafixapp.com/app';
 
+
+// ── XSS Koruması: HTML kaçışı ────────────────────────────────────
+// Kullanıcı girdisi (ürün adı, marka, not, kullanıcı adı vb.) innerHTML'e
+// basılmadan ÖNCE bu fonksiyondan geçirilmeli.
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+// JS string bağlamı için (onclick="..(' ${x} ')" gibi) güvenli kaçış
+function escapeJs(s) {
+  if (s == null) return '';
+  return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"')
+    .replace(/</g, '\\x3C').replace(/>/g, '\\x3E').replace(/\r?\n/g, ' ');
+}
 
 // ── Hata Mesajı Çevirici ─────────────────────────────────────────
 function translateError(msg) {
@@ -1754,14 +1775,19 @@ function setLoading(on) {
 window.addEventListener('DOMContentLoaded', () => {
   initTheme();
 
-  // Beni hatırla — kayıtlı bilgileri yükle
+  // ── Mail linki dönüşlerini işle (şifre sıfırlama / e-posta doğrulama) ──
+  // Supabase linkleri hash ile döner: #access_token=...&type=recovery|signup&...
+  if (handleAuthRedirect()) return; // recovery ekranı açıldıysa normal init'i atla
+
+  // Beni hatırla — kayıtlı bilgileri yükle (şifre artık saklanmıyor)
   const saved = localStorage.getItem('rafix_remember');
   if (saved) {
     try {
-      const { username, password } = JSON.parse(saved);
+      const { username, refresh_token } = JSON.parse(saved);
       document.getElementById('auth-username').value = username || '';
-      document.getElementById('auth-password').value = password || '';
       document.getElementById('remember-me').checked = true;
+      // refresh_token varsa otomatik oturum aç
+      if (refresh_token) { autoLoginWithToken(refresh_token, username); }
     } catch {}
   }
   const sel = document.getElementById('f-category');
@@ -1833,6 +1859,7 @@ async function doAuth() {
     if (authMode === 'login')    await doLogin();
     else if (authMode === 'register') await doRegister();
     else if (authMode === 'reset')    await doReset();
+    else if (authMode === 'recovery') await doRecoveryReset();
   } catch(e) {
     showToast('Hata: ' + (e.message || e.toString()).slice(0, 80));
     console.error(e);
@@ -1883,10 +1910,10 @@ async function doLogin() {
 
   sessionStorage.setItem('rafix_session', JSON.stringify(me));
 
-  // Beni hatırla
+  // Beni hatırla — şifre ASLA saklanmaz; yalnızca refresh_token + tanıtım için kullanıcı adı
   const remember = document.getElementById('remember-me')?.checked;
-  if (remember) {
-    localStorage.setItem('rafix_remember', JSON.stringify({ username: identifier, password: pass }));
+  if (remember && me.refresh_token) {
+    localStorage.setItem('rafix_remember', JSON.stringify({ username: me.username, refresh_token: me.refresh_token }));
   } else {
     localStorage.removeItem('rafix_remember');
   }
@@ -1971,7 +1998,7 @@ async function doRegister() {
   if (exists?.length > 0) { showToast('Bu kullanıcı adı alınmış.'); return; }
 
   // Supabase Auth ile kayıt
-  const data = await sbAuth('signup', {
+  const data = await sbAuth('signup?redirect_to=' + encodeURIComponent(APP_URL), {
     email, password: pass,
     data: { username, full_name: fullname, account_type: accountType, company_name: company }
   });
@@ -2025,7 +2052,7 @@ async function doReset() {
   const email = document.getElementById('auth-email').value.trim();
   if (!email) { showToast('E-posta adresinizi girin.'); return; }
 
-  await fetch(SUPABASE_URL + '/auth/v1/recover', {
+  await fetch(SUPABASE_URL + '/auth/v1/recover?redirect_to=' + encodeURIComponent(APP_URL), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
     body: JSON.stringify({ email })
@@ -2252,7 +2279,7 @@ function renderSidebar() {
       const c = countOf(g.id);
       return `<button class="nav-btn${activeGroup===g.id?' active':''}" onclick="setActive('${g.id}')">
         <span class="nav-icon">👥</span>
-        <span class="nav-label">${g.name}</span>
+        <span class="nav-label">${escapeHtml(g.name)}</span>
         ${c.danger > 0 ? `<span class="nav-count">${c.danger}</span>` : ''}
         <span class="role-pill" style="background:${ROLES[role].color}22;color:${ROLES[role].color}">${roleLabel(role)}</span>
       </button>`;
@@ -2390,9 +2417,9 @@ function render() {
         style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer">
     </label>` : ''}
     ${p.image ? `<img src="${p.image}" onclick="window.open(this.src,'_blank')" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:10px;cursor:pointer">` : ''}
-      <div class="prod-cat">${CAT_EMOJI[p.category]||'📦'} ${p.category}</div>
-      <div class="prod-name">${p.name}</div>
-      <div class="prod-meta">${p.brand||'—'}${p.qty ? ' · '+p.qty : ''}</div>
+      <div class="prod-cat">${CAT_EMOJI[p.category]||'📦'} ${escapeHtml(p.category)}</div>
+      <div class="prod-name">${escapeHtml(p.name)}</div>
+      <div class="prod-meta">${escapeHtml(p.brand)||'—'}${p.qty ? ' · '+escapeHtml(p.qty) : ''}</div>
       <div class="prod-skt-row">
         <span class="prod-skt-label">SKT</span>
         <span class="prod-skt-date">${fmtDate(p.expiry)}</span>
@@ -2403,11 +2430,11 @@ function render() {
         <span class="status-badge" style="background:${cfg.bg};color:${cfg.color}">
           <span class="status-dot" style="background:${cfg.color}"></span>${cfg.label}
         </span>
-        <span style="font-size:11px;color:var(--muted)">${p.ownerName}</span>
+        <span style="font-size:11px;color:var(--muted)">${escapeHtml(p.ownerName)}</span>
       </div>
-      ${p.note ? `<div class="prod-note">📍 ${p.note}</div>` : ''}
+      ${p.note ? `<div class="prod-note">📍 ${escapeHtml(p.note)}</div>` : ''}
       <div class="prod-actions">
-        <button class="prod-edit-btn" onclick="openNotesModal('${p.id}','${p.name.replace(/'/g,"\\'")}')">💬 Not</button>
+        <button class="prod-edit-btn" onclick="openNotesModal('${p.id}','${escapeJs(p.name)}')">💬 Not</button>
         ${canEdit   ? `<button class="prod-edit-btn" onclick="openEditProd('${p.id}')">✏️ Düzenle</button>` : ''}
         ${canDelete ? `<button class="prod-del-btn"  onclick="deleteProd('${p.id}')">🗑️ Sil</button>` : ''}
       </div>
@@ -2799,7 +2826,7 @@ function renderGmMembers() {
     return `<div class="member-row">
       <div class="user-avatar" style="width:32px;height:32px;font-size:13px;background:${ROLES[m.role]?.color||'#888'}">${uname[0].toUpperCase()}</div>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;color:var(--dark)">${uname}${m.user_id===me.id?' (sen)':''}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--dark)">${escapeHtml(uname)}${m.user_id===me.id?' (sen)':''}</div>
         <div style="font-size:11px;font-weight:600;color:${ROLES[m.role]?.color}">${roleLabel(m.role)}</div>
       </div>
       ${canManage && m.user_id !== me.id ? `
@@ -3202,6 +3229,118 @@ async function renameGroup() {
 }
 
 // ── Token yenileme ────────────────────────────────────────────────
+// ── Mail linki dönüşlerini işle ──────────────────────────────────
+let recoveryToken = null;
+function parseHashParams() {
+  const h = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
+  const p = new URLSearchParams(h);
+  return {
+    access_token: p.get('access_token'),
+    type: p.get('type'),
+    error: p.get('error') || p.get('error_code'),
+    error_description: p.get('error_description'),
+  };
+}
+function handleAuthRedirect() {
+  const { access_token, type, error, error_description } = parseHashParams();
+  // Hatalı/expired link
+  if (error) {
+    showToast('Bağlantı geçersiz veya süresi dolmuş. Lütfen tekrar deneyin.');
+    history.replaceState(null, '', window.location.pathname);
+    return false;
+  }
+  // Şifre sıfırlama: yeni şifre belirleme ekranını göster
+  if (type === 'recovery' && access_token) {
+    recoveryToken = access_token;
+    history.replaceState(null, '', window.location.pathname); // hash'i temizle
+    showResetScreen();
+    return true;
+  }
+  // E-posta doğrulama: giriş ekranına yönlendir ve bilgilendir
+  if (type === 'signup' && access_token) {
+    history.replaceState(null, '', window.location.pathname);
+    setAuthMode('login');
+    showApp(false);
+    setTimeout(() => showToast('✅ E-posta adresiniz doğrulandı. Şimdi giriş yapabilirsiniz.'), 300);
+    return false;
+  }
+  return false;
+}
+function showResetScreen() {
+  showApp(false);
+  authMode = 'recovery';
+  document.getElementById('field-username') && (document.getElementById('field-username').style.display = 'none');
+  document.getElementById('field-email')    && (document.getElementById('field-email').style.display = 'none');
+  const pwField = document.getElementById('field-password');
+  if (pwField) pwField.style.display = '';
+  document.getElementById('auth-password').placeholder = 'Yeni şifreniz (en az 6 karakter)';
+  const tabs = document.getElementById('auth-tabs'); if (tabs) tabs.style.display = 'none';
+  const back = document.getElementById('back-link'); if (back) back.style.display = 'none';
+  const btn = document.getElementById('auth-btn'); if (btn) btn.textContent = 'Şifreyi Güncelle';
+}
+async function doRecoveryReset() {
+  const pass = document.getElementById('auth-password').value.trim();
+  if (!pass || pass.length < 6) { showToast('Şifre en az 6 karakter olmalı.'); return; }
+  if (!recoveryToken) { showToast('Oturum bulunamadı, linki tekrar açın.'); return; }
+  const res = await fetch(SUPABASE_URL + '/auth/v1/user', {
+    method: 'PUT',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + recoveryToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pass })
+  });
+  if (!res.ok) throw new Error((await res.json()).msg || 'Şifre güncellenemedi');
+  recoveryToken = null;
+  document.getElementById('auth-password').value = '';
+  document.getElementById('auth-password').placeholder = 'Şifreniz';
+  const tabs = document.getElementById('auth-tabs'); if (tabs) tabs.style.display = '';
+  setAuthMode('login');
+  showToast('✅ Şifreniz güncellendi. Şimdi giriş yapabilirsiniz.');
+}
+
+// ── Beni hatırla: refresh_token ile otomatik giriş ───────────────
+async function autoLoginWithToken(refresh_token, username) {
+  try {
+    const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ refresh_token })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.access_token) {
+      localStorage.removeItem('rafix_remember'); // token süresi dolmuş
+      return;
+    }
+    me = {
+      id: data.user.id,
+      email: data.user.email,
+      username: data.user.user_metadata?.username || username || data.user.email.split('@')[0],
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      is_admin: false,
+    };
+    try {
+      const profile = await sb(`profiles?id=eq.${me.id}&select=is_admin,account_type,company_name,plan,full_name,is_global_admin,global_admin_owner_id`);
+      if (profile?.[0]) {
+        me.is_admin = profile[0].is_admin || false;
+        me.account_type = profile[0].account_type || 'bireysel';
+        me.company_name = profile[0].company_name || null;
+        me.plan = profile[0].plan || null;
+        me.full_name = profile[0].full_name || null;
+        me.is_global_admin = profile[0].is_global_admin || false;
+        me.global_admin_owner_id = profile[0].global_admin_owner_id || null;
+      }
+    } catch(e) {}
+    // Kayıtlı token'ı yenile
+    localStorage.setItem('rafix_remember', JSON.stringify({ username: me.username, refresh_token: me.refresh_token }));
+    sessionStorage.setItem('rafix_session', JSON.stringify(me));
+    await loadAll();
+    setupUserUI();
+    showApp(true);
+    if (me?.account_type === 'kurumsal') showPage('overview'); else render();
+    checkNotificationsOnLoad();
+    startPlanWatcher();
+  } catch(e) { console.warn('Otomatik giriş başarısız:', e); }
+}
+
 async function refreshToken() {
   const saved = sessionStorage.getItem('rafix_session');
   if (!saved) { logout(); return false; }
@@ -3621,7 +3760,7 @@ function renderStats() {
         return `<div class="waste-card">
           <div class="waste-icon">${CAT_EMOJI[p.category]||'📦'}</div>
           <div class="waste-info">
-            <div class="waste-name">${p.name}${p.brand?' · '+p.brand:''}</div>
+            <div class="waste-name">${escapeHtml(p.name)}${p.brand?' · '+escapeHtml(p.brand):''}</div>
             <div class="waste-date">SKT: ${fmtDate(p.expiry)} · ${p.ownerName||''}</div>
           </div>
           <span class="waste-badge" style="background:${cfg.bg};color:${cfg.color}">${txt}</span>
@@ -3662,7 +3801,7 @@ function renderWaste() {
       <div class="waste-card">
         <div class="waste-icon">${CAT_EMOJI[p.category]||'📦'}</div>
         <div class="waste-info">
-          <div class="waste-name">${p.name}${p.brand?' · '+p.brand:''}</div>
+          <div class="waste-name">${escapeHtml(p.name)}${p.brand?' · '+escapeHtml(p.brand):''}</div>
           <div class="waste-date">SKT: ${fmtDate(p.expiry)} · ${p.ownerName||''}</div>
         </div>
         <span class="waste-badge" style="background:var(--danger-bg);color:var(--danger)">${Math.abs(daysLeft(p.expiry))} gün önce</span>
@@ -3742,8 +3881,8 @@ async function loadNotes(productId) {
     }
     list.innerHTML = notes.map(n => `
       <div class="note-item">
-        <div class="note-author">${n.user_name}</div>
-        <div class="note-text">${n.note}</div>
+        <div class="note-author">${escapeHtml(n.user_name)}</div>
+        <div class="note-text">${escapeHtml(n.note)}</div>
         <div class="note-time">${new Date(n.created_at).toLocaleDateString('tr-TR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
       </div>`).join('');
     list.scrollTop = list.scrollHeight;
