@@ -217,7 +217,8 @@ a{color:inherit;text-decoration:none}
 .mfield{margin-bottom:1rem}
 .mfield label{display:block;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 .mfield input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rad);font-size:14px;color:var(--dark);background:var(--cream);outline:none;transition:border-color .15s}
-.mfield input::placeholder,.mfield textarea::placeholder{color:var(--muted)}.mfield select{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--rad);font-size:13px;color:var(--dark);background:var(--cream);outline:none;transition:border-color .15s;cursor:pointer;height:40px;box-sizing:border-box}
+.mfield input::placeholder,.mfield textarea::placeholder{color:var(--muted)}
+#f-expiry-d,#f-expiry-m,#f-expiry-y{padding:0 !important;height:100% !important;background:transparent !important;border-radius:0 !important}.mfield select{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--rad);font-size:13px;color:var(--dark);background:var(--cream);outline:none;transition:border-color .15s;cursor:pointer;height:40px;box-sizing:border-box}
 .mfield input:focus,.mfield select:focus{border-color:var(--accent);background:var(--white)}
 .mrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
 .modal-submit{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--rad);font-size:14px;font-weight:600;letter-spacing:.2px}
@@ -236,7 +237,7 @@ a{color:inherit;text-decoration:none}
 .invite-hint{margin-top:8px;padding:9px 12px;background:var(--cream);border-radius:8px;font-size:12px;color:var(--muted);border:1px dashed var(--border)}
 
 /* Toast */
-.toast{position:fixed;bottom:1.75rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--dark);color:#fff;padding:11px 22px;border-radius:40px;font-size:13px;font-weight:500;z-index:9999;pointer-events:none;white-space:nowrap;box-shadow:0 6px 24px rgba(0,0,0,0.2);transition:transform .3s cubic-bezier(.34,1.56,.64,1);border:1px solid rgba(255,255,255,0.1)}
+.toast{position:fixed;bottom:1.75rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--accent);color:#fff;padding:11px 22px;border-radius:40px;font-size:13px;font-weight:500;z-index:9999;pointer-events:none;white-space:nowrap;box-shadow:0 6px 24px rgba(0,0,0,0.2);transition:transform .3s cubic-bezier(.34,1.56,.64,1);border:1px solid rgba(255,255,255,0.1)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 /* ── Image Preview ── */
@@ -269,7 +270,7 @@ a{color:inherit;text-decoration:none}
 .waste-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
 .date-filter{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap}
 .date-filter-btn{padding:6px 14px;border-radius:40px;border:1.5px solid var(--border);background:var(--white);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}
-.date-filter-btn.active{background:var(--dark);border-color:var(--dark);color:#fff}
+.date-filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .big-stat{text-align:center;padding:1.5rem;background:var(--white);border:1.5px solid var(--border);border-radius:var(--rad-lg)}
 .big-stat-num{font-family:var(--ff-serif);font-size:48px;font-weight:700;line-height:1}
 .big-stat-label{font-size:13px;color:var(--muted);margin-top:4px}
@@ -1085,15 +1086,15 @@ window.addEventListener('offline', updateOnlineStatus);
         <label>Son Kullanma Tarihi *</label>
         <div style="display:flex;align-items:center;border:1.5px solid var(--border);border-radius:var(--rad);background:var(--white);padding:0 10px;gap:0;height:40px;box-sizing:border-box">
           <input id="f-expiry-d" type="text" inputmode="numeric" maxlength="2" placeholder="GG"
-            style="flex:1;border:none;outline:none;font-size:14px;background:transparent;color:var(--dark);font-family:var(--ff-sans);text-align:center;min-width:0"
+            style="flex:1;border:none;outline:none;font-size:14px;background:transparent;color:var(--dark);font-family:var(--ff-sans);text-align:center;min-width:0;padding:0;height:100%;border-radius:0"
             oninput="syncExpiryDate()">
           <span style="color:var(--muted);font-size:14px;flex-shrink:0;padding:0 2px">/</span>
           <input id="f-expiry-m" type="text" inputmode="numeric" maxlength="2" placeholder="AA"
-            style="flex:1;border:none;outline:none;font-size:14px;background:transparent;color:var(--dark);font-family:var(--ff-sans);text-align:center;min-width:0"
+            style="flex:1;border:none;outline:none;font-size:14px;background:transparent;color:var(--dark);font-family:var(--ff-sans);text-align:center;min-width:0;padding:0;height:100%;border-radius:0"
             oninput="syncExpiryDate()">
           <span style="color:var(--muted);font-size:14px;flex-shrink:0;padding:0 2px">/</span>
           <input id="f-expiry-y" type="text" inputmode="numeric" maxlength="4" placeholder="YYYY"
-            style="flex:2;border:none;outline:none;font-size:14px;background:transparent;color:var(--dark);font-family:var(--ff-sans);text-align:center;min-width:0"
+            style="flex:2;border:none;outline:none;font-size:14px;background:transparent;color:var(--dark);font-family:var(--ff-sans);text-align:center;min-width:0;padding:0;height:100%;border-radius:0"
             oninput="syncExpiryDate()">
           <input type="hidden" id="f-expiry">
         </div>
@@ -1335,19 +1336,19 @@ window.addEventListener('offline', updateOnlineStatus);
         <label>Kullanıcı Adı</label>
         <div style="display:flex;gap:8px">
           <input id="st-username" placeholder="Yeni kullanıcı adı">
-          <button onclick="updateUsername()" style="padding:10px 14px;background:var(--dark);color:#fff;border:none;border-radius:var(--rad);font-family:var(--ff-sans);font-size:13px;font-weight:600;white-space:nowrap">Kaydet</button>
+          <button onclick="updateUsername()" style="padding:10px 14px;background:var(--accent);color:#fff;border:none;border-radius:var(--rad);font-family:var(--ff-sans);font-size:13px;font-weight:600;white-space:nowrap">Kaydet</button>
         </div>
       </div>
       <div class="mfield" style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border)">
         <label>E-posta Değiştir</label>
         <input id="st-email" type="email" placeholder="Yeni e-posta adresi" style="margin-bottom:8px">
-        <button onclick="updateEmail()" style="width:100%;padding:10px;background:var(--dark);color:#fff;border:none;border-radius:var(--rad);font-family:var(--ff-sans);font-size:13px;font-weight:600">E-postayı Güncelle</button>
+        <button onclick="updateEmail()" style="width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--rad);font-family:var(--ff-sans);font-size:13px;font-weight:600">E-postayı Güncelle</button>
       </div>
       <div class="mfield" style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border)">
         <label>Şifre Değiştir</label>
         <input id="st-pass1" type="password" placeholder="Yeni şifre" style="margin-bottom:8px">
         <input id="st-pass2" type="password" placeholder="Şifreyi tekrarla" style="margin-bottom:8px">
-        <button onclick="updatePassword()" style="width:100%;padding:10px;background:var(--dark);color:#fff;border:none;border-radius:var(--rad);font-family:var(--ff-sans);font-size:13px;font-weight:600">Şifreyi Güncelle</button>
+        <button onclick="updatePassword()" style="width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--rad);font-family:var(--ff-sans);font-size:13px;font-weight:600">Şifreyi Güncelle</button>
       </div>
     </div>
 
@@ -1441,7 +1442,7 @@ window.addEventListener('offline', updateOnlineStatus);
       <div style="background:var(--cream);border-radius:var(--rad);padding:1rem;margin-bottom:1rem">
         <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:6px">1. Şablonu İndir</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Aşağıdaki şablonu indir, Excel/Google Sheets ile doldur.</div>
-        <button onclick="downloadTemplate()" style="padding:8px 14px;background:var(--dark);color:#fff;border:none;border-radius:var(--rad);font-size:13px;font-weight:600;font-family:var(--ff-sans);cursor:pointer">⬇️ Şablon İndir (.csv)</button>
+        <button onclick="downloadTemplate()" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:var(--rad);font-size:13px;font-weight:600;font-family:var(--ff-sans);cursor:pointer">⬇️ Şablon İndir (.csv)</button>
       </div>
 
       <div style="background:var(--cream);border-radius:var(--rad);padding:1rem;margin-bottom:1rem">
@@ -1512,7 +1513,7 @@ window.addEventListener('offline', updateOnlineStatus);
 </div>
 
 <!-- Bulk Action Bar -->
-<div id="bulk-action-bar" style="display:none;position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;border-radius:40px;padding:10px 20px;gap:12px;align-items:center;z-index:400;box-shadow:0 4px 20px rgba(0,0,0,0.3);font-size:13px">
+<div id="bulk-action-bar" style="display:none;position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;border-radius:40px;padding:10px 20px;gap:12px;align-items:center;z-index:400;box-shadow:0 4px 20px rgba(0,0,0,0.3);font-size:13px">
   <span id="bulk-count" style="font-weight:600"></span>
   <button onclick="selectAllProds()" style="padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;font-size:12px;font-family:var(--ff-sans);cursor:pointer">Tümünü Seç</button>
   <button onclick="openBulkSKT()" style="padding:5px 14px;border-radius:20px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:600;font-family:var(--ff-sans);cursor:pointer">📅 SKT Güncelle</button>
@@ -3144,7 +3145,7 @@ function renderGmSettings() {
   document.getElementById('gm-settings-panel').innerHTML = canManage
     ? `<div class="mfield"><label>Grup Adı</label><div style="display:flex;gap:8px">
         <input id="gm-newname" value="${grp.name}" placeholder="Grup adı">
-        <button onclick="renameGroup()" style="padding:10px 16px;background:var(--dark);color:#fff;border:none;border-radius:var(--rad);font-family:var(--ff-sans);font-size:13px;font-weight:600;white-space:nowrap">Kaydet</button>
+        <button onclick="renameGroup()" style="padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--rad);font-family:var(--ff-sans);font-size:13px;font-weight:600;white-space:nowrap">Kaydet</button>
       </div></div>
       ${isOwner ? `<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
         <div style="font-size:13px;font-weight:600;color:var(--danger);margin-bottom:6px">⚠️ Tehlikeli Bölge</div>
