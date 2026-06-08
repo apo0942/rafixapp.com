@@ -393,7 +393,10 @@ input[type=number] { -moz-appearance:textfield; }
 }
 
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+  <script>
 // ── PDF & Excel Export ────────────────────────────────────────────
 
 // Tarih formatı yardımcısı
@@ -1551,6 +1554,69 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // Mail linklerinin döneceği uygulama adresi (Supabase Dashboard > Redirect URLs listesine de eklenmeli)
 const APP_URL = 'https://rafixapp.com/app';
 
+// ── Web Push (Firebase Cloud Messaging) ──────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBWWnLvf-GshOiPXRmrWCrud1mrRanL4f4",
+  authDomain: "rafix-8cf71.firebaseapp.com",
+  projectId: "rafix-8cf71",
+  storageBucket: "rafix-8cf71.firebasestorage.app",
+  messagingSenderId: "286296256399",
+  appId: "1:286296256399:web:6a258c91a055f5a964a5fa",
+};
+const VAPID_KEY = "BJti6opBYOJ7usqIStlTQnw4kQ3JYbrZu9GS-rMYQh0iiu8592YeMsCU0EBcDBDwNoGLYevDmoZa850SzWOhcGg";
+const PUSH_WORKER_URL = 'https://rafix-push.slasheer0942.workers.dev';
+let webPushToken = null;
+
+async function initWebPush() {
+  // Sadece tarayıcıda ve destekleniyorsa
+  if (!('serviceWorker' in navigator) || typeof firebase === 'undefined') return;
+  if (!me?.id) return;
+  try {
+    if (!firebase.apps?.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const messaging = firebase.messaging();
+    // Service worker'ı kaydet (rafixapp.com kökünde firebase-messaging-sw.js olmalı)
+    const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+    const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+    if (token) {
+      webPushToken = token;
+      await saveWebPushToken(token);
+    }
+    // Uygulama açıkken gelen bildirimleri göster
+    messaging.onMessage((payload) => {
+      const n = payload.notification || {};
+      showToast(`🔔 ${n.title || 'Bildirim'}: ${n.body || ''}`);
+    });
+  } catch(e) { console.warn('Web push başlatılamadı:', e); }
+}
+
+async function saveWebPushToken(token) {
+  if (!me?.id || !token) return;
+  try {
+    await sb('push_tokens?on_conflict=user_id,token', {
+      method: 'POST',
+      prefer: 'resolution=merge-duplicates,return=minimal',
+      body: { user_id: me.id, token, platform: 'web', updated_at: new Date().toISOString() },
+    });
+    console.log('[Rafix] Web push token kaydedildi');
+  } catch(e) {
+    if (!String(e.message||'').includes('23505') && !String(e.message||'').includes('409'))
+      console.warn('Web push token kaydedilemedi:', e);
+  }
+}
+
+async function notifyGroupNewProduct(groupId, productName) {
+  if (!groupId || groupId === 'personal' || !me?.access_token) return;
+  try {
+    await fetch(PUSH_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + me.access_token },
+      body: JSON.stringify({ groupId, productName, action: 'add' }),
+    });
+  } catch(e) { console.warn('Grup bildirimi gönderilemedi:', e); }
+}
+
 
 // ── XSS Koruması: HTML kaçışı ────────────────────────────────────
 // Kullanıcı girdisi (ürün adı, marka, not, kullanıcı adı vb.) innerHTML'e
@@ -1930,6 +1996,7 @@ async function doLogin() {
   }
   showToast(`Hoş geldin, ${me.username}!`);
   checkNotificationsOnLoad();
+  initWebPush();
   // Her 5 dakikada plan değişikliğini kontrol et
   startPlanWatcher();
 }
@@ -3338,6 +3405,7 @@ async function autoLoginWithToken(refresh_token, username) {
     showApp(true);
     if (me?.account_type === 'kurumsal') showPage('overview'); else render();
     checkNotificationsOnLoad();
+  initWebPush();
     startPlanWatcher();
   } catch(e) { console.warn('Otomatik giriş başarısız:', e); }
 }
