@@ -1574,8 +1574,9 @@ async function initWebPush() {
   try {
     if (!firebase.apps?.length) firebase.initializeApp(FIREBASE_CONFIG);
     const messaging = firebase.messaging();
-    // Service worker'ı kaydet (rafixapp.com kökünde firebase-messaging-sw.js olmalı)
+    // Service worker'ı kaydet ve AKTİF olmasını bekle (yoksa "no active Service Worker" hatası)
     const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    await navigator.serviceWorker.ready; // aktifleşene kadar bekle
     const perm = await Notification.requestPermission();
     if (perm !== 'granted') return;
     const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
