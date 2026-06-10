@@ -656,14 +656,14 @@ async function openProdHistory(prodId, prodName) {
           <div style="display:flex;align-items:center;gap:8px">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:13px">${actionIcon}</div>
             <div>
-              <span style="font-size:13px;font-weight:600;color:var(--dark)">${l.user_name}</span>
-              <span style="font-size:12px;color:var(--muted);margin-left:4px">${l.action}</span>
+              <span style="font-size:13px;font-weight:600;color:var(--dark)">${escapeHtml(l.user_name)}</span>
+              <span style="font-size:12px;color:var(--muted);margin-left:4px">${escapeHtml(l.action)}</span>
             </div>
           </div>
           <div style="font-size:11px;color:var(--muted);flex-shrink:0">${time}</div>
         </div>
         ${l.detail ? `<div style="margin-left:36px;font-size:11px;color:var(--muted);line-height:1.8;background:var(--cream);padding:6px 10px;border-radius:6px">
-          ${l.detail.split('·').map(d => d.trim()).filter(Boolean).map(d => `<div>• ${d}</div>`).join('')}
+          ${l.detail.split('·').map(d => d.trim()).filter(Boolean).map(d => `<div>• ${escapeHtml(d)}</div>`).join('')}
         </div>` : ''}
       </div>`;
     }).join('');
@@ -781,6 +781,11 @@ window.addEventListener('offline', updateOnlineStatus);
 </script>
 </head>
 <body>
+
+<!-- Offline uyarı çubuğu -->
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#C0392B;color:#fff;text-align:center;padding:8px 12px;font-size:13px;font-weight:500;font-family:var(--ff-sans);box-shadow:0 2px 8px rgba(0,0,0,.2)">
+  📡 İnternet bağlantısı yok — değişiklikler kaydedilemeyebilir
+</div>
 
 <!-- Auth Screen -->
 <div id="auth-screen" style="display:none">
@@ -922,6 +927,7 @@ window.addEventListener('offline', updateOnlineStatus);
   <main class="main">
     <div class="page-head">
       <div>
+        <div id="breadcrumb" style="display:none;font-size:12px;color:var(--muted);margin-bottom:4px;flex-wrap:wrap;gap:4px;align-items:center"></div>
         <div class="page-title" id="page-title">Kişisel</div>
         <div class="page-sub" id="page-sub"></div>
       </div>
@@ -933,10 +939,10 @@ window.addEventListener('offline', updateOnlineStatus);
     </div>
 
     <div class="stats-grid" id="home-stats-grid">
-      <div class="stat-card"><div class="stat-label">Toplam Ürün</div><div class="stat-val" id="s-total" style="color:var(--dark)">0</div></div>
-      <div class="stat-card s-danger"><div class="stat-label">Kritik ≤ 3 gün</div><div class="stat-val" id="s-danger" style="color:var(--danger)">0</div></div>
-      <div class="stat-card s-warn"><div class="stat-label">Yaklaşıyor ≤ 7 gün</div><div class="stat-val" id="s-warn" style="color:var(--warn)">0</div></div>
-      <div class="stat-card s-expired"><div class="stat-label">Süresi Geçmiş</div><div class="stat-val" id="s-expired" style="color:var(--muted)">0</div></div>
+      <div class="stat-card"><div class="stat-label" id="s-total-lbl">Toplam Ürün</div><div class="stat-val" id="s-total" style="color:var(--dark)">0</div></div>
+      <div class="stat-card s-danger"><div class="stat-label" id="s-danger-lbl">Kritik ≤ 3 gün</div><div class="stat-val" id="s-danger" style="color:var(--danger)">0</div></div>
+      <div class="stat-card s-warn"><div class="stat-label" id="s-warn-lbl">Yaklaşıyor ≤ 7 gün</div><div class="stat-val" id="s-warn" style="color:var(--warn)">0</div></div>
+      <div class="stat-card s-expired"><div class="stat-label" id="s-expired-lbl">Süresi Geçmiş</div><div class="stat-val" id="s-expired" style="color:var(--muted)">0</div></div>
     </div>
     <!-- Plan limiti göstergesi -->
     <div id="plan-limit-bar" style="display:none;margin-bottom:10px;background:var(--cream);border-radius:var(--rad);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;font-size:12px">
@@ -1206,6 +1212,25 @@ window.addEventListener('offline', updateOnlineStatus);
       <button class="modal-close" onclick="closeModal('newgroup-modal')">✕</button>
     </div>
     <!-- Kurumsal: üst grup seçimi -->
+    <div class="mfield" id="field-group-type" style="display:none">
+      <label>Tür</label>
+      <div style="display:flex;gap:10px">
+        <button type="button" id="gtype-region" onclick="setGroupType('region')"
+          style="flex:1;padding:14px 10px;border:2px solid var(--border);border-radius:var(--rad);background:var(--white);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s">
+          <span style="font-size:22px">📍</span>
+          <span style="font-size:13px;font-weight:600;color:var(--dark)">Bölge</span>
+          <span style="font-size:10px;color:var(--muted);text-align:center;line-height:1.3">Ayırıcı / klasör<br>(ürün eklenmez)</span>
+        </button>
+        <button type="button" id="gtype-branch" onclick="setGroupType('branch')"
+          style="flex:1;padding:14px 10px;border:2px solid var(--border);border-radius:var(--rad);background:var(--white);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s">
+          <span style="font-size:22px">🏪</span>
+          <span style="font-size:13px;font-weight:600;color:var(--dark)">Şube</span>
+          <span style="font-size:10px;color:var(--muted);text-align:center;line-height:1.3">Ürünler buraya<br>eklenir</span>
+        </button>
+      </div>
+      <input type="hidden" id="newgroup-type" value="branch">
+    </div>
+
     <div class="mfield" id="field-parent-group" style="display:none">
       <label id="newgroup-parent-label">Bağlı Olduğu Grup</label>
       <!-- Gizli input — seçilen group id -->
@@ -1842,6 +1867,7 @@ function setLoading(on) {
 // ── Init ─────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   initTheme();
+  initOfflineBanner();
 
   // ── Mail linki dönüşlerini işle (şifre sıfırlama / e-posta doğrulama) ──
   // Supabase linkleri hash ile döner: #access_token=...&type=recovery|signup&...
@@ -2367,6 +2393,16 @@ function getAncestors(groupId) {
   return ancestors;
 }
 
+function getChildren(groupId) {
+  return groups.filter(g => g.parent_id === groupId);
+}
+
+function countDescendantProducts(groupId) {
+  let total = (prodMap[groupId] || []).length;
+  getChildren(groupId).forEach(c => { total += countDescendantProducts(c.id); });
+  return total;
+}
+
 function setActive(gid) {
   activeGroup = gid;
   activeFilter = 'all';
@@ -2400,6 +2436,7 @@ function setActive(gid) {
     : '';
   document.getElementById('manage-btn').style.display   = gid ? '' : 'none';
   document.getElementById('activity-btn').style.display  = gid ? '' : 'none';
+  renderBreadcrumb(gid);
   const _addPerms = activeGroup ? getRolePerms(activeGroup, role) : ROLES[role] || ROLES.viewer;
   document.getElementById('add-prod-btn').style.display  = _addPerms?.canAdd ? '' : 'none';
   document.getElementById('nav-waste').classList.remove('active');
@@ -2414,8 +2451,163 @@ function setFilter(f, btn) {
 }
 
 // ── Render ────────────────────────────────────────────────────────
+function renderBreadcrumb(gid) {
+  const bc = document.getElementById('breadcrumb');
+  if (!bc) return;
+  if (!gid) { bc.style.display = 'none'; return; }
+  const chain = [...getAncestors(gid)].reverse();
+  const parts = [];
+  const rootLabel = (me?.account_type === 'kurumsal') ? (me?.company_name || 'Genel') : 'Kişisel';
+  parts.push(`<span onclick="setActive(null)" style="cursor:pointer;color:var(--accent)">${escapeHtml(rootLabel)}</span>`);
+  chain.forEach(id => {
+    const g = groups.find(x => x.id === id);
+    if (g) parts.push(`<span onclick="setActive('${id}')" style="cursor:pointer;color:var(--accent)">${escapeHtml(g.name)}</span>`);
+  });
+  const cur = groups.find(x => x.id === gid);
+  if (cur) parts.push(`<span style="color:var(--dark);font-weight:600">${escapeHtml(cur.name)}</span>`);
+  if (parts.length <= 1) { bc.style.display = 'none'; return; }
+  bc.style.display = 'flex';
+  bc.innerHTML = parts.join('<span style="color:var(--muted);margin:0 2px">›</span>');
+}
+
+function renderRegionView(region) {
+  const grid  = document.getElementById('products-grid');
+  const empty = document.getElementById('empty-state');
+  const children = getChildren(region.id);
+  const regions = children.filter(c => c.group_type === 'region');
+  const branches = children.filter(c => c.group_type !== 'region');
+
+  document.getElementById('page-title').textContent = region.name;
+  document.getElementById('page-sub').textContent = 'Bölge';
+  renderBreadcrumb(region.id);
+  document.getElementById('add-prod-btn').style.display = 'none';
+
+  document.getElementById('s-total-lbl').textContent   = 'Toplam Ürün';
+  document.getElementById('s-danger-lbl').textContent  = 'Bölge';
+  document.getElementById('s-warn-lbl').textContent    = 'Şube';
+  document.getElementById('s-expired-lbl').textContent = 'Toplam Birim';
+  document.getElementById('s-total').textContent   = countDescendantProducts(region.id);
+  document.getElementById('s-danger').textContent  = regions.length;
+  document.getElementById('s-warn').textContent    = branches.length;
+  document.getElementById('s-expired').textContent = children.length;
+  const fb = document.getElementById('home-filter-bar'); if (fb) fb.style.display = 'none';
+
+  if (children.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+    const es = document.getElementById('empty-sub');
+    if (es) es.textContent = 'Bu bölge boş. Grup oluştururken üst grup olarak bu bölgeyi seçerek şube ekleyin.';
+    renderSidebar();
+    return;
+  }
+  grid.style.display = 'grid';
+  empty.style.display = 'none';
+  const ordered = [...regions, ...branches];
+  grid.innerHTML = ordered.map((c, idx) => {
+    const isRegion = c.group_type === 'region';
+    const icon = isRegion ? '📍' : '🏪';
+    const typeLabel = isRegion ? 'Bölge' : 'Şube';
+    const sub = isRegion ? `${getChildren(c.id).length} alt birim` : `${(prodMap[c.id]||[]).length} ürün`;
+    const memberCount = c.members?.length || 0;
+    return `<div class="prod-card" onclick="setActive('${c.id}')" style="cursor:pointer;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:28px">${icon}</span>
+        <div style="flex:1;min-width:0">
+          <div class="prod-name" style="margin:0">${escapeHtml(c.name)}</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">${typeLabel}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+        <span style="font-size:13px;color:var(--dark);font-weight:600">${sub}</span>
+        <span style="font-size:11px;color:var(--muted)">${memberCount} üye</span>
+      </div>
+      <div style="text-align:right;color:var(--accent);font-size:18px;margin-top:-4px">›</div>
+    </div>`;
+  }).join('');
+  renderSidebar();
+}
+
+function renderGeneralOverview() {
+  const grid  = document.getElementById('products-grid');
+  const empty = document.getElementById('empty-state');
+
+  document.getElementById('page-title').textContent = me?.company_name || 'Genel';
+  document.getElementById('page-sub').textContent = 'Genel Bakış';
+  document.getElementById('breadcrumb').style.display = 'none';
+  document.getElementById('add-prod-btn').style.display = 'none';
+  const fb = document.getElementById('home-filter-bar'); if (fb) fb.style.display = 'none';
+
+  const allRegions  = groups.filter(g => g.group_type === 'region');
+  const allBranches = groups.filter(g => g.group_type !== 'region');
+  let totalProd = 0, totalDanger = 0, totalExpired = 0;
+  allBranches.forEach(b => {
+    (prodMap[b.id] || []).forEach(p => {
+      totalProd++;
+      const st = getStatus(daysLeft(p.expiry));
+      if (st === 'danger') totalDanger++;
+      else if (st === 'expired') totalExpired++;
+    });
+  });
+  document.getElementById('s-total-lbl').textContent   = 'Toplam Ürün';
+  document.getElementById('s-danger-lbl').textContent  = 'Bölge';
+  document.getElementById('s-warn-lbl').textContent    = 'Şube';
+  document.getElementById('s-expired-lbl').textContent = 'Kritik Ürün';
+  document.getElementById('s-total').textContent   = totalProd;
+  document.getElementById('s-danger').textContent  = allRegions.length;
+  document.getElementById('s-warn').textContent    = allBranches.length;
+  document.getElementById('s-expired').textContent = totalDanger + totalExpired;
+
+  const topLevel = groups.filter(g => !g.parent_id);
+  if (topLevel.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+    const es = document.getElementById('empty-sub');
+    if (es) es.textContent = 'Henüz bölge veya şube yok. Sol menüden yeni bölge ya da şube oluşturun.';
+    renderSidebar();
+    return;
+  }
+  grid.style.display = 'grid';
+  empty.style.display = 'none';
+  const regions = topLevel.filter(c => c.group_type === 'region');
+  const branches = topLevel.filter(c => c.group_type !== 'region');
+  const ordered = [...regions, ...branches];
+  grid.innerHTML = ordered.map((c, idx) => {
+    const isRegion = c.group_type === 'region';
+    const icon = isRegion ? '📍' : '🏪';
+    const typeLabel = isRegion ? 'Bölge' : 'Şube';
+    const sub = isRegion ? `${getChildren(c.id).length} alt birim` : `${(prodMap[c.id]||[]).length} ürün`;
+    return `<div class="prod-card" onclick="setActive('${c.id}')" style="cursor:pointer;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:28px">${icon}</span>
+        <div style="flex:1;min-width:0">
+          <div class="prod-name" style="margin:0">${escapeHtml(c.name)}</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">${typeLabel}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+        <span style="font-size:13px;color:var(--dark);font-weight:600">${sub}</span>
+        <span style="color:var(--accent);font-size:18px">›</span>
+      </div>
+    </div>`;
+  }).join('');
+  renderSidebar();
+}
+
 function render() {
   const gid = activeGroup || 'personal';
+
+  // ── GENEL BAKIŞ: kurumsal hesap + kök ekran ──
+  if (!activeGroup && me?.account_type === 'kurumsal') {
+    renderGeneralOverview();
+    return;
+  }
+  // ── BÖLGE GÖRÜNÜMÜ: aktif grup bir bölgeyse ──
+  const activeGrp = groups.find(g => g.id === activeGroup);
+  if (activeGrp && activeGrp.group_type === 'region') {
+    renderRegionView(activeGrp);
+    return;
+  }
+
   const search = document.getElementById('search-input').value.toLowerCase();
   const sort = document.getElementById('sort-sel').value;
 
@@ -2445,6 +2637,12 @@ function render() {
   );
 
   const cc = countOf(gid);
+  // Bölge/genel bakıştan dönüşte etiketleri normale döndür
+  document.getElementById('s-total-lbl').textContent   = 'Toplam Ürün';
+  document.getElementById('s-danger-lbl').textContent  = 'Kritik ≤ 3 gün';
+  document.getElementById('s-warn-lbl').textContent    = 'Yaklaşıyor ≤ 7 gün';
+  document.getElementById('s-expired-lbl').textContent = 'Süresi Geçmiş';
+  const _fb = document.getElementById('home-filter-bar'); if (_fb) _fb.style.display = '';
   document.getElementById('s-total').textContent   = cc.all;
   document.getElementById('s-danger').textContent  = cc.danger;
   document.getElementById('s-warn').textContent    = cc.warn;
@@ -2514,6 +2712,11 @@ function render() {
 
 // ── Product CRUD ──────────────────────────────────────────────────
 function openAddProd() {
+  const grp = groups.find(g => g.id === activeGroup);
+  if (grp?.group_type === 'region') {
+    showToast('Bölgelere ürün eklenemez. Lütfen bir şube seçin.');
+    return;
+  }
   editingProdId = null;
   document.getElementById('prod-modal-title').textContent = 'Ürün Ekle';
   ['f-name','f-brand','f-qty','f-note','f-barcode'].forEach(id => document.getElementById(id).value = '');
@@ -2561,10 +2764,13 @@ function clearProdImage() {
 }
 function closeProdModal() { closeModal('prod-modal'); prodImageBase64 = null; }
 
+let saveProdBusy = false;
 async function saveProd() {
+  if (saveProdBusy) return;
   const name   = document.getElementById('f-name').value.trim();
   const expiry = document.getElementById('f-expiry').value;
   if (!name || !expiry) { showToast('Ürün adı ve SKT zorunludur.'); return; }
+  if (!navigator.onLine) { showToast('İnternet bağlantısı yok. Lütfen bağlanıp tekrar deneyin.'); return; }
 
   const gid = activeGroup || 'personal';
   const body = {
@@ -2579,6 +2785,11 @@ async function saveProd() {
     group_id:   gid === 'personal' ? null : gid,
     image_data: prodImageBase64 || null,
   };
+
+  saveProdBusy = true;
+  const saveBtn = document.querySelector('#prod-modal .modal-submit');
+  const oldBtnText = saveBtn ? saveBtn.textContent : '';
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Kaydediliyor…'; saveBtn.style.opacity = '0.6'; }
 
   try {
     if (editingProdId) {
@@ -2605,6 +2816,7 @@ async function saveProd() {
       closeProdModal();
       render();
       await logActivity(gid === 'personal' ? null : gid, 'ürün ekledi', name, `Kategori: ${body.category||'-'} · SKT: ${formatDateTR(body.expiry)}`);
+      notifyGroupNewProduct(gid, name);
       showToast('Ürün eklendi ✓');
     }
     // Barkod varsa → Rafix DB'ye sessizce kaydet (kullanıcıya sormadan)
@@ -2613,12 +2825,16 @@ async function saveProd() {
       saveToRafixDB(barcode, name, body.brand, body.category).catch(()=>{});
     }
   } catch(e) {
-    showToast(translateError(e.message) || '❌ Kayıt hatası!'); console.error(e);
+    showToast(translateError(e.message) || (navigator.onLine ? '❌ Kayıt hatası!' : 'Bağlantı koptu, tekrar deneyin.')); console.error(e);
+  } finally {
+    saveProdBusy = false;
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = oldBtnText; saveBtn.style.opacity = '1'; }
   }
 }
 
 async function deleteProd(id) {
   if (!confirm('Bu ürün silinsin mi?')) return;
+  if (!navigator.onLine) { showToast('İnternet bağlantısı yok.'); return; }
   const gid = activeGroup || 'personal';
   try {
     const delName = (prodMap[gid]||[]).find(x=>x.id===id)?.name || '';
@@ -2683,6 +2899,16 @@ function getTotalProdCount() {
   return Object.values(prodMap).reduce((sum, arr) => sum + (arr?.length || 0), 0);
 }
 
+function setGroupType(type) {
+  document.getElementById('newgroup-type').value = type;
+  const region = document.getElementById('gtype-region');
+  const branch = document.getElementById('gtype-branch');
+  region.style.border = type === 'region' ? '2px solid var(--accent)' : '2px solid var(--border)';
+  region.style.background = type === 'region' ? 'var(--cream)' : 'var(--white)';
+  branch.style.border = type === 'branch' ? '2px solid var(--accent)' : '2px solid var(--border)';
+  branch.style.background = type === 'branch' ? 'var(--cream)' : 'var(--white)';
+}
+
 function openNewGroupModal() {
   const ownedGroups = groups.filter(g => g.myRole === 'owner');
   const maxGroups   = getMaxGroups();
@@ -2712,11 +2938,14 @@ function openNewGroupModal() {
     document.getElementById('selected-parent-label').style.display = 'none';
     document.getElementById('selected-parent-name').textContent = '';
     buildParentOptions();
+    document.getElementById('field-group-type').style.display = '';
+    setGroupType('branch');
   } else {
     document.getElementById('newgroup-title').textContent = 'Yeni Grup Oluştur';
     document.getElementById('newgroup-name-label').textContent = 'Grup Adı';
     document.getElementById('newgroup-name').placeholder = 'Ev, Yazlık, Ofis…';
     document.getElementById('field-parent-group').style.display = 'none';
+    document.getElementById('field-group-type').style.display = 'none';
   }
 
   openModal('newgroup-modal');
@@ -2818,12 +3047,16 @@ function getGroupDepth(groupId, depth = 0) {
 async function saveNewGroup() {
   const name     = document.getElementById('newgroup-name').value.trim();
   const parentId = document.getElementById('newgroup-parent')?.value || null;
+  const gtype    = (me?.account_type === 'kurumsal')
+    ? (document.getElementById('newgroup-type')?.value || 'branch')
+    : 'branch';
   if (!name) return;
   try {
     const body = {
       name,
       created_by: me.id,
       parent_id:  parentId || null,
+      group_type: gtype,
     };
     const [ng] = await sbWithRefresh('groups?select=*', { method:'POST', prefer:'return=representation', body });
     await sbWithRefresh('group_members', { method:'POST', body:{ group_id: ng.id, user_id: me.id, role: 'owner' } });
@@ -2893,7 +3126,7 @@ function renderGmMembers() {
     const u = users.find(x=>x.id===m.user_id);
     const uname = u?.username || m.user_id;
     return `<div class="member-row">
-      <div class="user-avatar" style="width:32px;height:32px;font-size:13px;background:${ROLES[m.role]?.color||'#888'}">${uname[0].toUpperCase()}</div>
+      <div class="user-avatar" style="width:32px;height:32px;font-size:13px;background:${ROLES[m.role]?.color||'#888'}">${escapeHtml(uname[0].toUpperCase())}</div>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:600;color:var(--dark)">${escapeHtml(uname)}${m.user_id===me.id?' (sen)':''}</div>
         <div style="font-size:11px;font-weight:600;color:${ROLES[m.role]?.color}">${roleLabel(m.role)}</div>
@@ -3212,7 +3445,7 @@ function renderGmSettings() {
   const canManage = ROLES[grp.myRole]?.canManage;
   document.getElementById('gm-settings-panel').innerHTML = canManage
     ? `<div class="mfield"><label>Grup Adı</label><div style="display:flex;gap:8px">
-        <input id="gm-newname" value="${grp.name}" placeholder="Grup adı">
+        <input id="gm-newname" value="${escapeHtml(grp.name)}" placeholder="Grup adı">
         <button onclick="renameGroup()" style="padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--rad);font-family:var(--ff-sans);font-size:13px;font-weight:600;white-space:nowrap">Kaydet</button>
       </div></div>
       ${isOwner ? `<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
@@ -3649,6 +3882,15 @@ function cycleTheme() {
   applyTheme(THEMES[(THEMES.indexOf(cur)+1) % THEMES.length]);
 }
 
+function initOfflineBanner() {
+  const banner = document.getElementById('offline-banner');
+  if (!banner) return;
+  const update = () => { banner.style.display = navigator.onLine ? 'none' : 'block'; };
+  window.addEventListener('online', update);
+  window.addEventListener('offline', update);
+  update();
+}
+
 function initTheme() {
   applyTheme(localStorage.getItem('rafix_theme') || 'system');
 }
@@ -3831,7 +4073,7 @@ function renderStats() {
           <div class="waste-icon">${CAT_EMOJI[p.category]||'📦'}</div>
           <div class="waste-info">
             <div class="waste-name">${escapeHtml(p.name)}${p.brand?' · '+escapeHtml(p.brand):''}</div>
-            <div class="waste-date">SKT: ${fmtDate(p.expiry)} · ${p.ownerName||''}</div>
+            <div class="waste-date">SKT: ${fmtDate(p.expiry)} · ${escapeHtml(p.ownerName)||''}</div>
           </div>
           <span class="waste-badge" style="background:${cfg.bg};color:${cfg.color}">${txt}</span>
         </div>`;
@@ -3872,7 +4114,7 @@ function renderWaste() {
         <div class="waste-icon">${CAT_EMOJI[p.category]||'📦'}</div>
         <div class="waste-info">
           <div class="waste-name">${escapeHtml(p.name)}${p.brand?' · '+escapeHtml(p.brand):''}</div>
-          <div class="waste-date">SKT: ${fmtDate(p.expiry)} · ${p.ownerName||''}</div>
+          <div class="waste-date">SKT: ${fmtDate(p.expiry)} · ${escapeHtml(p.ownerName)||''}</div>
         </div>
         <span class="waste-badge" style="background:var(--danger-bg);color:var(--danger)">${Math.abs(daysLeft(p.expiry))} gün önce</span>
       </div>`).join('');
@@ -3912,11 +4154,11 @@ async function openActivityModal() {
       const time = new Date(l.created_at).toLocaleDateString('tr-TR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
       return `<div class="activity-item" style="flex-direction:column;align-items:flex-start;gap:4px">
         <div style="display:flex;align-items:center;gap:8px;width:100%">
-          <div class="activity-avatar">${(l.user_name||'?')[0].toUpperCase()}</div>
-          <div class="activity-text" style="flex:1"><strong>${l.user_name}</strong> ${l.action}${l.target_name?' — <em>'+l.target_name+'</em>':''}</div>
+          <div class="activity-avatar">${escapeHtml((l.user_name||'?')[0].toUpperCase())}</div>
+          <div class="activity-text" style="flex:1"><strong>${escapeHtml(l.user_name)}</strong> ${escapeHtml(l.action)}${l.target_name?' — <em>'+escapeHtml(l.target_name)+'</em>':''}</div>
           <div class="activity-time">${time}</div>
         </div>
-        ${l.detail ? `<div style="margin-left:40px;font-size:11px;color:var(--muted);line-height:1.6;background:var(--cream);padding:5px 8px;border-radius:6px;width:calc(100% - 40px);box-sizing:border-box">${l.detail.replace(/·/g,'<br>')}</div>` : ''}
+        ${l.detail ? `<div style="margin-left:40px;font-size:11px;color:var(--muted);line-height:1.6;background:var(--cream);padding:5px 8px;border-radius:6px;width:calc(100% - 40px);box-sizing:border-box">${escapeHtml(l.detail).replace(/·/g,'<br>')}</div>` : ''}
       </div>`;
     }).join('');
   } catch(e) {
@@ -4463,7 +4705,7 @@ function showImportPreview() {
   if (importErrors.length > 0) {
     errDiv.style.display = '';
     errDiv.innerHTML = importErrors.map(e =>
-      `<div>⚠️ Satır ${e.line} (${e.name}): ${e.errors.join(', ')}</div>`
+      `<div>⚠️ Satır ${escapeHtml(String(e.line))} (${escapeHtml(e.name)}): ${escapeHtml(e.errors.join(', '))}</div>`
     ).join('');
   } else {
     errDiv.style.display = 'none';
@@ -4473,12 +4715,12 @@ function showImportPreview() {
   const tbody = document.getElementById('import-preview-body');
   tbody.innerHTML = importRows.map(r => `
     <tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:7px 10px;color:var(--muted)">${r.barcode||'-'}</td>
-      <td style="padding:7px 10px;font-weight:500;color:var(--dark)">${r.name}</td>
-      <td style="padding:7px 10px;color:var(--muted)">${r.brand||'-'}</td>
-      <td style="padding:7px 10px;color:var(--muted)">${r.category}</td>
+      <td style="padding:7px 10px;color:var(--muted)">${escapeHtml(r.barcode)||'-'}</td>
+      <td style="padding:7px 10px;font-weight:500;color:var(--dark)">${escapeHtml(r.name)}</td>
+      <td style="padding:7px 10px;color:var(--muted)">${escapeHtml(r.brand)||'-'}</td>
+      <td style="padding:7px 10px;color:var(--muted)">${escapeHtml(r.category)}</td>
       <td style="padding:7px 10px;color:var(--muted)">${fmtDate(r.expiry)}</td>
-      <td style="padding:7px 10px;color:var(--muted)">${r.qty||'-'}</td>
+      <td style="padding:7px 10px;color:var(--muted)">${escapeHtml(r.qty)||'-'}</td>
       <td style="padding:7px 10px;color:var(--ok)">✓</td>
     </tr>
   `).join('');
