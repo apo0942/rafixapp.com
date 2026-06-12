@@ -2770,6 +2770,24 @@ async function saveProd() {
   const name   = document.getElementById('f-name').value.trim();
   const expiry = document.getElementById('f-expiry').value;
   if (!name || !expiry) { showToast('Ürün adı ve SKT zorunludur.'); return; }
+
+  // ── Veri doğrulama ──
+  const expYear = parseInt((expiry.split('-')[0] || '0'), 10);
+  const nowYear = new Date().getFullYear();
+  if (expYear < 2000 || expYear > nowYear + 30) {
+    showToast('Son kullanma tarihi hatalı görünüyor. Lütfen kontrol edin.');
+    return;
+  }
+  const dleft = daysLeft(expiry);
+  if (dleft < 0 && !editingProdId) {
+    if (!confirm(`Bu son kullanma tarihi ${Math.abs(dleft)} gün önce geçmiş. Yine de eklensin mi?`)) return;
+  }
+  const qtyRaw = document.getElementById('f-qty').value.trim();
+  if (qtyRaw && /^-\d/.test(qtyRaw)) {
+    showToast('Miktar negatif olamaz.');
+    return;
+  }
+
   if (!navigator.onLine) { showToast('İnternet bağlantısı yok. Lütfen bağlanıp tekrar deneyin.'); return; }
 
   const gid = activeGroup || 'personal';
