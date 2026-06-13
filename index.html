@@ -71,7 +71,7 @@ html{scroll-behavior:smooth}
 body{font-family:var(--ff-sans);background:var(--cream);color:var(--dark);overflow-x:hidden}
 
 /* ── Lang Toggle ── */
-.lang-toggle{position:fixed;top:1.25rem;right:1.25rem;z-index:999;display:flex;background:var(--white);border:1.5px solid var(--border);border-radius:40px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.lang-toggle{display:flex;background:var(--white);border:1.5px solid var(--border);border-radius:40px;overflow:hidden}
 .lang-btn{padding:6px 14px;border:none;background:none;font-size:12px;font-weight:600;font-family:var(--ff-sans);cursor:pointer;transition:all .2s;color:var(--muted)}
 .lang-btn.active{background:var(--dark);color:#fff}
 
@@ -196,7 +196,8 @@ footer{background:var(--dark);padding:3rem 2rem;text-align:center}
 
 /* ── Mobile ── */
 @media(max-width:768px){
-  nav .nav-links{display:none}
+  nav .nav-links{gap:.75rem}
+  nav .nav-links a:not(.nav-cta){display:none}
   .steps::before{display:none}
   .hero h1{letter-spacing:-1px}
   .hero-stats{gap:2rem}
@@ -212,11 +213,7 @@ footer{background:var(--dark);padding:3rem 2rem;text-align:center}
 </head>
 <body>
 
-<!-- Lang Toggle -->
-<div class="lang-toggle">
-  <button class="lang-btn active" onclick="setLang('tr')">TR</button>
-  <button class="lang-btn" onclick="setLang('en')">EN</button>
-</div>
+<!-- Lang Toggle nav içine taşındı -->
 
 <!-- Nav -->
 <nav id="navbar">
@@ -228,6 +225,10 @@ footer{background:var(--dark);padding:3rem 2rem;text-align:center}
     <a href="#contact" data-tr="İletişim" data-en="Contact">İletişim</a>
     <a href="#pricing" data-tr="Fiyatlar" data-en="Pricing">Fiyatlar</a>
     <a href="https://rafixapp.com/app" class="nav-cta" data-tr="Ücretsiz Başla" data-en="Get Started Free">Ücretsiz Başla</a>
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('tr')">TR</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
   </div>
 </nav>
 
