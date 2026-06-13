@@ -433,7 +433,7 @@ footer{background:var(--dark);padding:3rem 2rem;text-align:center}
           <li data-tr="Özelleştirilebilir rol izinleri" data-en="Customizable role permissions">Özelleştirilebilir rol izinleri</li>
           <li data-tr="SKT & fire raporları" data-en="Expiry & waste reports">SKT & fire raporları</li>
         </ul>
-        <a href="mailto:info@rafixapp.com" class="price-cta ghost" data-tr="Teklif Al →" data-en="Get Quote →">Teklif Al →</a>
+        <a href="#contact" class="price-cta ghost" data-tr="Teklif Al →" data-en="Get Quote →">Teklif Al →</a>
       </div>
 
       <div class="price-card featured reveal">
@@ -449,7 +449,7 @@ footer{background:var(--dark);padding:3rem 2rem;text-align:center}
           <li data-tr="Global admin (tüm şubeler)" data-en="Global admin (all branches)">Global admin (tüm şubeler)</li>
           <li data-tr="Öncelikli destek" data-en="Priority support">Öncelikli destek</li>
         </ul>
-        <a href="mailto:info@rafixapp.com" class="price-cta" data-tr="Teklif Al →" data-en="Get Quote →">Teklif Al →</a>
+        <a href="#contact" class="price-cta" data-tr="Teklif Al →" data-en="Get Quote →">Teklif Al →</a>
       </div>
 
       <div class="price-card reveal">
@@ -464,7 +464,7 @@ footer{background:var(--dark);padding:3rem 2rem;text-align:center}
           <li data-tr="Özel destek temsilcisi" data-en="Dedicated account manager">Özel destek temsilcisi</li>
           <li data-tr="SLA garantisi" data-en="SLA guarantee">SLA garantisi</li>
         </ul>
-        <a href="mailto:info@rafixapp.com" class="price-cta ghost" data-tr="Teklif Al →" data-en="Get Quote →">Teklif Al →</a>
+        <a href="#contact" class="price-cta ghost" data-tr="Teklif Al →" data-en="Get Quote →">Teklif Al →</a>
       </div>
 
       <div class="price-card reveal" style="grid-column:1/-1;max-width:380px;margin:0 auto;text-align:center">
@@ -472,7 +472,7 @@ footer{background:var(--dark);padding:3rem 2rem;text-align:center}
         <div class="price-amount" style="font-size:2.5rem" data-tr="Özel" data-en="Custom">Özel</div>
         <div class="price-period" data-tr="100+ şube · Özel fiyatlandırma" data-en="100+ branches · Custom pricing">100+ şube · Özel fiyatlandırma</div>
         <p class="price-desc" data-tr="API entegrasyonu, SLA garantisi, yerinde kurulum ve eğitim." data-en="API integration, SLA guarantee, on-site setup and training.">API entegrasyonu, SLA garantisi, yerinde kurulum ve eğitim.</p>
-        <a href="mailto:info@rafixapp.com" class="price-cta" data-tr="📩 Bizimle İletişime Geç" data-en="📩 Contact Us">📩 Bizimle İletişime Geç</a>
+        <a href="#contact" class="price-cta" data-tr="📩 Bizimle İletişime Geç" data-en="📩 Contact Us">📩 Bizimle İletişime Geç</a>
       </div>
     </div>
 
@@ -689,18 +689,37 @@ function toggleFaq(btn) {
   }
 }
 
-function submitContact(e) {
+const CONTACT_WORKER_URL = 'https://rafix-contact.slasheer0942.workers.dev';
+
+async function submitContact(e) {
   e.preventDefault();
-  const name    = document.getElementById('cf-name').value;
-  const email   = document.getElementById('cf-email').value;
-  const subject = document.getElementById('cf-subject').value;
-  const message = document.getElementById('cf-message').value;
-  // mailto ile gönder
-  const body = encodeURIComponent(`Ad Soyad: ${name}\nŞirket/Konu: ${subject}\n\n${message}`);
-  window.location.href = `mailto:info@rafixapp.com?subject=Rafix İletişim: ${encodeURIComponent(subject || name)}&body=${body}`;
-  // Başarı mesajı göster
-  document.getElementById('cf-success').style.display = '';
-  document.getElementById('contact-form').querySelectorAll('input,textarea').forEach(el => el.value = '');
+  const name    = document.getElementById('cf-name').value.trim();
+  const email   = document.getElementById('cf-email').value.trim();
+  const subject = document.getElementById('cf-subject').value.trim();
+  const message = document.getElementById('cf-message').value.trim();
+  if (!name || !email || !message) return;
+
+  const btn = document.querySelector('#contact-form button[type="submit"]');
+  const oldText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = (currentLang === 'en' ? 'Sending…' : 'Gönderiliyor…'); }
+
+  try {
+    const res = await fetch(CONTACT_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, subject, message }),
+    });
+    if (!res.ok) throw new Error('send failed');
+    // Başarı
+    document.getElementById('cf-success').style.display = '';
+    document.getElementById('contact-form').querySelectorAll('input,textarea').forEach(el => el.value = '');
+  } catch (err) {
+    alert(currentLang === 'en'
+      ? 'Could not send. Please email us directly at info@rafixapp.com'
+      : 'Gönderilemedi. Lütfen doğrudan info@rafixapp.com adresine yazın.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = oldText; }
+  }
 }
 
 function setPricingTab(tab) {
