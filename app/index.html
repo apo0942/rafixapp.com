@@ -2,8 +2,18 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>Rafix</title>
+
+<!-- iOS: Ana Ekrana Ekle desteği (uygulama gibi görünsün) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Rafix">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#C85A2A">
+<link rel="apple-touch-icon" href="https://rafixapp.com/favicon.png">
+<link rel="icon" type="image/png" href="https://rafixapp.com/favicon.png">
+<link rel="manifest" href="https://rafixapp.com/app/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -785,6 +795,17 @@ window.addEventListener('offline', updateOnlineStatus);
 <!-- Offline uyarı çubuğu -->
 <div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#C0392B;color:#fff;text-align:center;padding:8px 12px;font-size:13px;font-weight:500;font-family:var(--ff-sans);box-shadow:0 2px 8px rgba(0,0,0,.2)">
   📡 İnternet bağlantısı yok — değişiklikler kaydedilemeyebilir
+</div>
+
+<!-- iOS "Ana Ekrana Ekle" ipucu -->
+<div id="ios-install-hint" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;background:var(--white,#fff);border-top:1px solid var(--border,#E2D9CC);padding:14px 16px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(0,0,0,.12);font-family:var(--ff-sans)">
+  <div style="display:flex;align-items:center;gap:12px;max-width:500px;margin:0 auto">
+    <span style="font-size:26px">📲</span>
+    <div style="flex:1;font-size:13px;line-height:1.5;color:var(--dark,#1C1917)">
+      Rafix'i uygulama gibi kullan: aşağıdaki <strong>Paylaş</strong> <span style="font-size:15px">􀈂</span> düğmesine, sonra <strong>"Ana Ekrana Ekle"</strong>ye dokun.
+    </div>
+    <button onclick="dismissIosHint()" style="background:none;border:none;color:var(--muted,#78716C);font-size:20px;cursor:pointer;padding:4px 8px">✕</button>
+  </div>
 </div>
 
 <!-- Auth Screen -->
@@ -1868,6 +1889,7 @@ function setLoading(on) {
 window.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initOfflineBanner();
+  initIosInstallHint();
 
   // ── Mail linki dönüşlerini işle (şifre sıfırlama / e-posta doğrulama) ──
   // Supabase linkleri hash ile döner: #access_token=...&type=recovery|signup&...
@@ -3898,6 +3920,31 @@ function applyTheme(t) {
 function cycleTheme() {
   const cur = localStorage.getItem('rafix_theme') || 'system';
   applyTheme(THEMES[(THEMES.indexOf(cur)+1) % THEMES.length]);
+}
+
+function dismissIosHint() {
+  const el = document.getElementById('ios-install-hint');
+  if (el) el.style.display = 'none';
+  try { localStorage.setItem('rafix_ios_hint_dismissed', '1'); } catch {}
+}
+
+function initIosInstallHint() {
+  try {
+    // Zaten kapatmışsa gösterme
+    if (localStorage.getItem('rafix_ios_hint_dismissed') === '1') return;
+    const ua = window.navigator.userAgent;
+    const isIOS = /iPhone|iPod/.test(ua);
+    // Zaten ana ekrana eklenmiş (standalone) çalışıyorsa gösterme
+    const isStandalone = window.navigator.standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches;
+    if (isIOS && !isStandalone) {
+      // Girişten sonra, kısa gecikmeyle göster
+      setTimeout(() => {
+        const el = document.getElementById('ios-install-hint');
+        if (el) el.style.display = '';
+      }, 3000);
+    }
+  } catch {}
 }
 
 function initOfflineBanner() {
