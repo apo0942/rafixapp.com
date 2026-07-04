@@ -1050,6 +1050,7 @@ window.addEventListener('offline', updateOnlineStatus);
         <button onclick="exportStatsExcel()" style="padding:7px 14px;border:1.5px solid var(--border);border-radius:var(--rad);background:var(--white);color:var(--dark);font-size:12px;font-weight:600;font-family:var(--ff-sans);cursor:pointer">📊 Excel İndir</button>
         <button onclick="exportStatsPDF()" style="padding:7px 14px;border:none;border-radius:var(--rad);background:var(--accent);color:#fff;font-size:12px;font-weight:600;font-family:var(--ff-sans);cursor:pointer">📄 PDF İndir</button>
       </div>
+      <div id="stats-scope-filter" style="display:none;background:var(--white);border:1px solid var(--border);border-radius:var(--rad);padding:12px;margin-bottom:1rem"></div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem" id="stats-big-cards"></div>
       <div class="stats-section">
         <div class="stats-section-title">Kategori Dağılımı</div>
@@ -1079,6 +1080,7 @@ window.addEventListener('offline', updateOnlineStatus);
         <input type="date" id="waste-date-from" onchange="setWasteFilter('custom',null)" style="padding:5px 10px;border:1.5px solid var(--border);border-radius:40px;font-size:12px;background:var(--white);color:var(--dark);outline:none;font-family:var(--ff-sans)">
         <input type="date" id="waste-date-to"   onchange="setWasteFilter('custom',null)" style="padding:5px 10px;border:1.5px solid var(--border);border-radius:40px;font-size:12px;background:var(--white);color:var(--dark);outline:none;font-family:var(--ff-sans)">
       </div>
+      <div id="waste-scope-filter" style="display:none;background:var(--white);border:1px solid var(--border);border-radius:var(--rad);padding:12px;margin-bottom:1rem"></div>
       <div id="waste-list"></div>
     </div>
   </main>
@@ -2425,8 +2427,68 @@ function countDescendantProducts(groupId) {
 }
 
 // Toplu ürün toplayıcı — istatistik ve israf raporu için (bkz. Android tarafı).
+let statsScopeId = null;
+function resetStatsScope() { statsScopeId = null; }
+
+function renderStatsScopeFilter(containerId) {
+  const box = document.getElementById(containerId);
+  if (!box) return;
+  if (me?.account_type !== 'kurumsal') { box.style.display = 'none'; return; }
+
+  const focusId = statsScopeId !== null ? statsScopeId : activeGroup;
+  const focus   = focusId ? groups.find(g => g.id === focusId) : null;
+
+  if (focus && focus.group_type !== 'region') { box.style.display = 'none'; return; }
+
+  const children = focus
+    ? getChildren(focus.id)
+    : groups.filter(g => !g.parent_id);
+  if (children.length === 0) { box.style.display = 'none'; return; }
+
+  box.style.display = '';
+
+  const chain = focus ? [...getAncestors(focus.id)].reverse().concat(focus.id) : [];
+  const rootLabel = me?.company_name || 'Genel';
+  const parts = [`<span onclick="setStatsScope(null)" style="cursor:pointer;color:var(--accent);font-weight:600">${escapeHtml(rootLabel)}</span>`];
+  chain.forEach(id => {
+    const g = groups.find(x => x.id === id);
+    if (!g) return;
+    parts.push(`<span style="color:var(--muted);margin:0 4px">›</span>`);
+    if (id === focus?.id) parts.push(`<span style="color:var(--dark);font-weight:600">${escapeHtml(g.name)}</span>`);
+    else parts.push(`<span onclick="setStatsScope('${id}')" style="cursor:pointer;color:var(--accent);font-weight:600">${escapeHtml(g.name)}</span>`);
+  });
+
+  const regions  = children.filter(c => c.group_type === 'region');
+  const branches = children.filter(c => c.group_type !== 'region');
+  const ordered  = [...regions, ...branches];
+
+  const cardHtml = ordered.map(c => {
+    const isRegion = c.group_type === 'region';
+    const icon = isRegion ? '📍' : '🏪';
+    const label = isRegion ? 'Bölge' : 'Şube';
+    return `<button onclick="setStatsScope('${c.id}')"
+      style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--cream);border:1px solid var(--border);border-radius:40px;font-size:13px;font-family:var(--ff-sans);color:var(--dark);cursor:pointer;white-space:nowrap">
+      <span style="font-size:16px">${icon}</span>
+      <span style="font-weight:600">${escapeHtml(c.name)}</span>
+      <span style="color:var(--muted);font-size:11px">${label}</span>
+    </button>`;
+  }).join('');
+
+  box.innerHTML = `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;flex-wrap:wrap;align-items:center;gap:2px">
+      ${parts.join('')}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">${cardHtml}</div>`;
+}
+
+function setStatsScope(id) {
+  statsScopeId = id;
+  if (document.getElementById('stats-page').style.display !== 'none') renderStats();
+  if (document.getElementById('waste-page').style.display !== 'none') renderWaste();
+}
+
 function collectAggregatedProducts() {
-  const gid = activeGroup;
+  const gid = (statsScopeId !== null) ? statsScopeId : activeGroup;
   if (!gid && me?.account_type === 'kurumsal') {
     const out = [];
     groups.filter(g => g.group_type !== 'region').forEach(b => {
@@ -4016,6 +4078,7 @@ function showPage(page) {
     document.getElementById('page-title').textContent = 'İstatistikler';
     document.getElementById('page-sub').textContent   = grp ? grp.name + ' grubu analizi' : 'Kişisel analizi';
     addFilter = 'all'; sktFilter = 'all';
+    resetStatsScope();
     renderStats();
   } else if (isWaste) {
     document.getElementById('waste-page').style.display      = '';
@@ -4027,6 +4090,7 @@ function showPage(page) {
     const grp = groups.find(g => g.id === activeGroup);
     document.getElementById('page-title').textContent = '🗑️ İsraf Raporu';
     document.getElementById('page-sub').textContent   = grp ? grp.name : 'Kişisel';
+    resetStatsScope();
     renderWaste('all');
   } else {
     setActive(activeGroup);
@@ -4088,6 +4152,7 @@ function applySktFilter(prods) {
 }
 
 function renderStats() {
+  renderStatsScopeFilter('stats-scope-filter');
   const allProds = applySktFilter(applyAddFilter(collectAggregatedProducts()));
   const expired  = allProds.filter(p => daysLeft(p.expiry) < 0);
   const ok       = allProds.filter(p => daysLeft(p.expiry) > 7);
@@ -4181,6 +4246,7 @@ function setWasteFilter(f, btn) {
 }
 
 function renderWaste() {
+  renderStatsScopeFilter('waste-scope-filter');
   let expired = collectAggregatedProducts().filter(p => daysLeft(p.expiry) < 0);
   if (wasteFilter === '7' || wasteFilter === '30') {
     const days = parseInt(wasteFilter);
