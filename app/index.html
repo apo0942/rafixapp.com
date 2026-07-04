@@ -418,11 +418,11 @@ function formatDateTR(dateStr) {
 
 // Aktif gruptaki ürünleri al
 function getExportProds() {
-  const gid = activeGroup;
-  return (prodMap[gid] || []).map(p => ({
+  return collectAggregatedProducts().map(p => ({
     'Ürün Adı':    p.name || '',
     'Marka':       p.brand || '',
     'Kategori':    p.category || '',
+    'Şube':        p.branchName || '',
     'SKT':         formatDateTR(p.expiry),
     'Kalan Gün':   daysLeft(p.expiry),
     'Durum':       daysLeft(p.expiry) < 0 ? 'Geçmiş' : daysLeft(p.expiry) <= 3 ? 'Kritik' : daysLeft(p.expiry) <= 7 ? 'Yaklaşıyor' : 'Taze',
@@ -433,14 +433,13 @@ function getExportProds() {
 
 // İsraf raporundaki ürünleri al
 function getWasteExportProds() {
-  const gid = activeGroup;
-  const now = new Date(); now.setHours(0,0,0,0);
-  return (prodMap[gid] || [])
+  return collectAggregatedProducts()
     .filter(p => daysLeft(p.expiry) < 0)
     .map(p => ({
       'Ürün Adı':    p.name || '',
       'Marka':       p.brand || '',
       'Kategori':    p.category || '',
+      'Şube':        p.branchName || '',
       'SKT':         formatDateTR(p.expiry),
       'Geçen Gün':   Math.abs(daysLeft(p.expiry)),
       'Miktar':      p.qty || '',
@@ -2425,6 +2424,33 @@ function countDescendantProducts(groupId) {
   return total;
 }
 
+// Toplu ürün toplayıcı — istatistik ve israf raporu için (bkz. Android tarafı).
+function collectAggregatedProducts() {
+  const gid = activeGroup;
+  if (!gid && me?.account_type === 'kurumsal') {
+    const out = [];
+    groups.filter(g => g.group_type !== 'region').forEach(b => {
+      (prodMap[b.id] || []).forEach(p => out.push({ ...p, branchName: b.name }));
+    });
+    return out;
+  }
+  if (!gid) return (prodMap['personal'] || []).map(p => ({ ...p, branchName: 'Kişisel' }));
+  const g = groups.find(x => x.id === gid);
+  if (g && g.group_type === 'region') {
+    const out = [];
+    function walk(parentId) {
+      getChildren(parentId).forEach(c => {
+        if (c.group_type === 'region') walk(c.id);
+        else (prodMap[c.id] || []).forEach(p => out.push({ ...p, branchName: c.name }));
+      });
+    }
+    walk(gid);
+    return out;
+  }
+  const branchName = g?.name || '';
+  return (prodMap[gid] || []).map(p => ({ ...p, branchName }));
+}
+
 function setActive(gid) {
   activeGroup = gid;
   activeFilter = 'all';
@@ -4062,8 +4088,7 @@ function applySktFilter(prods) {
 }
 
 function renderStats() {
-  const gid = activeGroup || 'personal';
-  const allProds = applySktFilter(applyAddFilter(prodMap[gid] || []));
+  const allProds = applySktFilter(applyAddFilter(collectAggregatedProducts()));
   const expired  = allProds.filter(p => daysLeft(p.expiry) < 0);
   const ok       = allProds.filter(p => daysLeft(p.expiry) > 7);
 
@@ -4138,7 +4163,7 @@ function renderStats() {
           <div class="waste-icon">${CAT_EMOJI[p.category]||'📦'}</div>
           <div class="waste-info">
             <div class="waste-name">${escapeHtml(p.name)}${p.brand?' · '+escapeHtml(p.brand):''}</div>
-            <div class="waste-date">SKT: ${fmtDate(p.expiry)} · ${escapeHtml(p.ownerName)||''}</div>
+            <div class="waste-date">SKT: ${fmtDate(p.expiry)}${p.branchName?' · 🏪 '+escapeHtml(p.branchName):''}${p.ownerName?' · '+escapeHtml(p.ownerName):''}</div>
           </div>
           <span class="waste-badge" style="background:${cfg.bg};color:${cfg.color}">${txt}</span>
         </div>`;
@@ -4156,8 +4181,7 @@ function setWasteFilter(f, btn) {
 }
 
 function renderWaste() {
-  const gid = activeGroup || 'personal';
-  let expired = (prodMap[gid] || []).filter(p => daysLeft(p.expiry) < 0);
+  let expired = collectAggregatedProducts().filter(p => daysLeft(p.expiry) < 0);
   if (wasteFilter === '7' || wasteFilter === '30') {
     const days = parseInt(wasteFilter);
     const from = new Date(Date.now() - days * 86400000);
@@ -4179,7 +4203,7 @@ function renderWaste() {
         <div class="waste-icon">${CAT_EMOJI[p.category]||'📦'}</div>
         <div class="waste-info">
           <div class="waste-name">${escapeHtml(p.name)}${p.brand?' · '+escapeHtml(p.brand):''}</div>
-          <div class="waste-date">SKT: ${fmtDate(p.expiry)} · ${escapeHtml(p.ownerName)||''}</div>
+          <div class="waste-date">SKT: ${fmtDate(p.expiry)}${p.branchName?' · 🏪 '+escapeHtml(p.branchName):''}${p.ownerName?' · '+escapeHtml(p.ownerName):''}</div>
         </div>
         <span class="waste-badge" style="background:var(--danger-bg);color:var(--danger)">${Math.abs(daysLeft(p.expiry))} gün önce</span>
       </div>`).join('');
