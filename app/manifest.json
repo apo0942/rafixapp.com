@@ -1,0 +1,19 @@
+{
+  "name": "Rafix - SKT Takip",
+  "short_name": "Rafix",
+  "description": "Akıllı son kullanma tarihi takibi",
+  "start_url": "/app/",
+  "display": "standalone",
+  "background_color": "#F5F0E8",
+  "theme_color": "#C85A2A",
+  "orientation": "portrait",
+  "lang": "tr",
+  "icons": [
+    {
+      "src": "https://rafixapp.com/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
