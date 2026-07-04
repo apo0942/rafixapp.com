@@ -81,7 +81,7 @@
     --sidebar-bg:#111009;
   }
 }
-body{font-family:var(--ff-sans);background:var(--cream);color:var(--dark);min-height:100vh;font-size:14px;line-height:1.5}
+body{font-family:var(--ff-sans);background:var(--cream);color:var(--dark);min-height:100vh;font-size:14px;line-height:1.5;overflow-x:hidden}
 button{cursor:pointer;font-family:var(--ff-sans);transition:all 0.15s}
 button:active{transform:scale(0.97)}
 input,select,textarea{font-family:var(--ff-sans)}
@@ -146,9 +146,16 @@ a{color:inherit;text-decoration:none}
 .logout-btn{padding:4px 9px;border:1px solid rgba(255,255,255,0.12);border-radius:7px;background:none;color:rgba(255,255,255,0.35);font-size:11px;white-space:nowrap;transition:max-width .3s,opacity .2s,padding .3s;overflow:hidden;max-width:80px}
 .logout-btn:hover{color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.3)}
 .app.collapsed .logout-btn{max-width:0;opacity:0;padding:0;border-width:0}
+/* Collapsed: gruplar sadece ikon olarak görünsün, dropdown okları gizle */
+.app.collapsed .nav-btn{padding-left:9px!important;justify-content:center}
+.app.collapsed #groups-nav button[onclick*="toggleGroup"]{display:none!important}
+.app.collapsed #groups-nav > div > div{justify-content:center}
+.app.collapsed .sidebar-footer{justify-content:center}
+.app.collapsed .user-avatar{margin:0 auto}
+.app.collapsed .add-group-btn{justify-content:center}
 
 /* ── Main ── */
-.main{padding:2rem 1.75rem;overflow-y:auto;background:var(--cream)}
+.main{padding:2rem 1.75rem;overflow-y:auto;overflow-x:hidden;min-width:0;background:var(--cream)}
 .page-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:12px}
 .page-title{font-family:var(--ff-serif);font-size:26px;color:var(--dark);letter-spacing:-.4px;line-height:1.2}
 .page-sub{font-size:12px;color:var(--muted);margin-top:3px}
@@ -159,7 +166,14 @@ a{color:inherit;text-decoration:none}
 .btn-primary:hover{opacity:.88}
 
 /* Stats */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.5rem}
+@media (max-width:600px){
+  .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+#stats-big-cards{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+@media (max-width:600px){
+  #stats-big-cards{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
 .stat-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rad-lg);padding:1rem 1.1rem;transition:transform .15s}
 .stat-card:hover{transform:translateY(-1px)}
 .stat-label{font-size:11px;font-weight:500;color:var(--muted);margin-bottom:4px;letter-spacing:.2px}
