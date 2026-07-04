@@ -2438,12 +2438,20 @@ function renderStatsScopeFilter(containerId) {
   const focusId = statsScopeId !== null ? statsScopeId : activeGroup;
   const focus   = focusId ? groups.find(g => g.id === focusId) : null;
 
-  if (focus && focus.group_type !== 'region') { box.style.display = 'none'; return; }
+  let children;
+  if (focus && focus.group_type !== 'region') {
+    const parentId = focus.parent_id || null;
+    const siblings = parentId
+      ? getChildren(parentId)
+      : groups.filter(g => !g.parent_id);
+    children = siblings.filter(c => c.id !== focus.id);
+  } else {
+    children = focus
+      ? getChildren(focus.id)
+      : groups.filter(g => !g.parent_id);
+  }
 
-  const children = focus
-    ? getChildren(focus.id)
-    : groups.filter(g => !g.parent_id);
-  if (children.length === 0) { box.style.display = 'none'; return; }
+  const hasChildren = children.length > 0;
 
   box.style.display = '';
 
@@ -2474,11 +2482,19 @@ function renderStatsScopeFilter(containerId) {
     </button>`;
   }).join('');
 
+  let hintText = '';
+  if (focus && focus.group_type !== 'region') {
+    hintText = hasChildren ? 'Diğer birime geç:' : '';
+  } else if (hasChildren) {
+    hintText = 'Alt birime odaklan:';
+  }
+
   box.innerHTML = `
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;flex-wrap:wrap;align-items:center;gap:2px">
       ${parts.join('')}
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px">${cardHtml}</div>`;
+    ${hintText ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px">${hintText}</div>` : ''}
+    ${hasChildren ? `<div style="display:flex;flex-wrap:wrap;gap:8px">${cardHtml}</div>` : ''}`;
 }
 
 function setStatsScope(id) {
@@ -4076,7 +4092,7 @@ function showPage(page) {
     document.getElementById('nav-stats').classList.add('active');
     const grp = groups.find(g => g.id === activeGroup);
     document.getElementById('page-title').textContent = 'İstatistikler';
-    document.getElementById('page-sub').textContent   = grp ? grp.name + ' grubu analizi' : 'Kişisel analizi';
+    document.getElementById('page-sub').textContent   = grp ? grp.name + ' grubu analizi' : (me?.account_type === 'kurumsal' ? (me?.company_name || 'Genel') + ' genel analizi' : 'Kişisel analizi');
     addFilter = 'all'; sktFilter = 'all';
     resetStatsScope();
     renderStats();
@@ -4089,7 +4105,7 @@ function showPage(page) {
     document.getElementById('nav-waste').classList.add('active');
     const grp = groups.find(g => g.id === activeGroup);
     document.getElementById('page-title').textContent = '🗑️ İsraf Raporu';
-    document.getElementById('page-sub').textContent   = grp ? grp.name : 'Kişisel';
+    document.getElementById('page-sub').textContent   = grp ? grp.name : (me?.account_type === 'kurumsal' ? (me?.company_name || 'Genel') : 'Kişisel');
     resetStatsScope();
     renderWaste('all');
   } else {
