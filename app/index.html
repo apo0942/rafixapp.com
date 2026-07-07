@@ -5,6 +5,56 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>Rafix</title>
 
+<!-- Sentry: hata izleme (öncelikli, erken hataları yakalayabilsin) -->
+<script src="https://js-de.sentry-cdn.com/f66b0ef4c9d25659078caa1c80ed300e.min.js" crossorigin="anonymous"></script>
+<script>
+  if (window.Sentry) Sentry.onLoad(function(){
+    Sentry.init({
+      // Ortam bilgisi (web vs android ayrılsın)
+      environment: "web-prod",
+      release: "rafix@2026-07-07",
+      // Örnekleme: hataların hepsini yakala
+      sampleRate: 1.0,
+      // Tracing/replay şu an kapalı (limit için)
+      tracesSampleRate: 0,
+      replaysSessionSampleRate: 0,
+      replaysOnErrorSampleRate: 0,
+      // Sızıntı önleme: e-postaları/kişisel veriyi gönderme
+      sendDefaultPii: false,
+      // Gürültü filtresi: kullanıcı tarayıcısından kaynaklı, senin uygulamanın olmayan hatalar
+      ignoreErrors: [
+        // Tarayıcı eklentileri
+        "top.GLOBALS", "originalCreateNotification",
+        "canvas.contentDocument", "MyApp_RemoveAllHighlights",
+        "atomicFindClose", "conduitPage",
+        // Ağ hataları (kullanıcının bağlantısı)
+        "NetworkError", "Network request failed",
+        "Load failed", "The Internet connection appears to be offline.",
+        // İptal edilen istekler (kullanıcı sekmeyi kapattı vs.)
+        "AbortError", "The operation was aborted",
+        "cancelled", "canceled",
+        // Beklenen Supabase hataları
+        "PGRST", "JWT expired",
+        // ResizeObserver — bilinen zararsız uyarı
+        "ResizeObserver loop", "ResizeObserver limit",
+        // Safari extension'ları
+        "webkit-masked-url"
+      ],
+      denyUrls: [
+        // Chrome eklentileri
+        /extensions\//i, /^chrome:\/\//i, /^chrome-extension:\/\//i,
+        // Safari eklentileri
+        /safari-web-extension:\/\//i, /^webkit-masked-url:\/\//i
+      ],
+      beforeSend(event, hint) {
+        // Console.error otomatik gönderimi engelle (biz manuel gönderiyoruz)
+        if (event.logger === "console") return null;
+        return event;
+      }
+    });
+  });
+</script>
+
 <!-- iOS: Ana Ekrana Ekle desteği (uygulama gibi görünsün) -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -2039,6 +2089,13 @@ async function doLogin() {
     }
   } catch(e) { console.warn('Profil kontrol hatası:', e); }
 
+  // Sentry: kimlik bilgisini bildir (PII korumak için sadece id + username)
+  if (window.Sentry && me?.id) try {
+    Sentry.setUser({ id: me.id, username: me.username });
+    Sentry.setTag("account_type", me.account_type || 'bireysel');
+    if (me.is_admin) Sentry.setTag("role", "admin");
+  } catch {}
+
   sessionStorage.setItem('rafix_session', JSON.stringify(me));
 
   // Beni hatırla — şifre ASLA saklanmaz; yalnızca refresh_token + tanıtım için kullanıcı adı
@@ -2196,6 +2253,8 @@ async function doReset() {
 
 // ── Çıkış ─────────────────────────────────────────────────────────
 async function logout() {
+  // Sentry: kullanıcı bilgisini temizle
+  if (window.Sentry) try { Sentry.setUser(null); } catch {}
   if (me?.access_token) {
     await fetch(SUPABASE_URL + '/auth/v1/logout', {
       method: 'POST',
@@ -3789,6 +3848,12 @@ async function autoLoginWithToken(refresh_token, username) {
         me.global_admin_owner_id = profile[0].global_admin_owner_id || null;
       }
     } catch(e) {}
+    // Sentry: kimlik bilgisini bildir
+    if (window.Sentry && me?.id) try {
+      Sentry.setUser({ id: me.id, username: me.username });
+      Sentry.setTag("account_type", me.account_type || 'bireysel');
+      if (me.is_admin) Sentry.setTag("role", "admin");
+    } catch {}
     // Kayıtlı token'ı yenile
     localStorage.setItem('rafix_remember', JSON.stringify({ username: me.username, refresh_token: me.refresh_token }));
     sessionStorage.setItem('rafix_session', JSON.stringify(me));
